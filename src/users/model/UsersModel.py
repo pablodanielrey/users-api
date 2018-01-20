@@ -8,7 +8,7 @@ import logging
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import joinedload, contains_eager
 
-from . import Session, obtener_template, enviar_correo, sincronizar_usuario
+from . import Session, obtener_template, enviar_correo
 from .exceptions import *
 from .entities import *
 
@@ -104,10 +104,13 @@ class UsersModel:
 
         session.commit()
 
+        '''
+            lo siguiente debo hacerlo con eventos para desacoplar sistemas y microservicios
         try:
             sincronizar_usuario(uclave.usuario_id)
         except Exception as e:
             logging.debug(e)
+        '''
 
     @classmethod
     def generar_clave(cls, session, uid):

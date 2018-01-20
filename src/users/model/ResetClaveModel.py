@@ -7,7 +7,7 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 from sqlalchemy import or_, and_
 
-from . import Session, UsersModel, obtener_template, enviar_correo, sincronizar_usuario
+from . import Session, UsersModel, obtener_template, enviar_correo
 from .exceptions import *
 from .JWTModel import JWTModel
 from .entities import *
@@ -223,9 +223,11 @@ class ResetClaveModel:
             logging.debug(e)
             raise ClaveError()
 
+        '''
+            TODO: lo siguiente tengo que hacerlo usando eventos para desacoplar sistemas
         try:
             sincronizar_usuario(usuario.id)
         except Exception as e:
             logging.debug(e)
-
+        '''
         return { 'estado': 'ok', 'mensaje': 'contraseña cambiada con éxito', 'codigo': 0 }

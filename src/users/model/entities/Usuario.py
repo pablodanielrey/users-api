@@ -7,7 +7,6 @@ from model_utils import Base
 class Usuario(Base):
 
     __tablename__ = 'users'
-    __table_args__ = ({'schema': 'profile'})
 
     dni = Column('dni', String)
     nombre = Column('name', String)
