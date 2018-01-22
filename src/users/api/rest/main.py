@@ -106,11 +106,17 @@ def obtener_avatar_binario_por_usuario(uid):
 
 
 @app.route('/users/api/v1.0/auth', methods=['POST'])
+@rs.require_valid_token
 @jsonapi
-def auth():
-    token = rs.bearer_token(request.headers)
-    logging.debug('token: {}'.format(token))
-    logging.debug(rs.verify_token(token))
+def auth(token=None):
+    logging.debug('Token RECIBIDO : {}'.format(token))
+
+    '''
+        chequeo que solo sea la app de consent la que pueda llamar a este método
+        client_id = consent
+    '''
+    if token['client_id'] != 'consent':
+        return {'error':'No permitido', 'status_code':403}, 403
 
     data = json.loads(request.data)
     usuario = data['usuario']
