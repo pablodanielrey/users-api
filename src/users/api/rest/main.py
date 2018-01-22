@@ -3,6 +3,7 @@ logging.getLogger().setLevel(logging.INFO)
 import sys
 import base64
 import hashlib
+import os
 
 from flask import Flask, abort, make_response, jsonify, url_for, request, json, send_from_directory, send_file
 from users.model import UsersModel
@@ -12,8 +13,15 @@ from dateutil import parser
 
 from rest_utils import register_encoder
 
+import oidc
+from oidc.oidc import ResourceServer
+
 from . import reset
 from users.model import Session
+
+client_id = os.environ['OIDC_CLIENT_ID']
+client_secret = os.environ['OIDC_CLIENT_SECRET']
+rs = ResourceServer(client_id, client_secret)
 
 app = Flask(__name__)
 app.debug = True
@@ -100,6 +108,10 @@ def obtener_avatar_binario_por_usuario(uid):
 @app.route('/users/api/v1.0/auth', methods=['POST'])
 @jsonapi
 def auth():
+    token = rs.bearer_token(request.headers)
+    logging.debug('token: {}'.format(token))
+    logging.debug(rs.verify_token(token))
+
     data = json.loads(request.data)
     usuario = data['usuario']
     clave = data['clave']
