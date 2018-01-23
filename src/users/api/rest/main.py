@@ -82,7 +82,7 @@ def obtener_avatar_binario(hash):
 @app.route('/users/api/v1.0/avatar/<hash>', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
-def agregar_avatar(hash):
+def agregar_avatar(hash, token=None):
     f = request.files['file']
     contenido = base64.b64encode(f.read()).decode('utf-8')
     UsersModel.actualizar_avatar(hash, contenido)
@@ -91,20 +91,20 @@ def agregar_avatar(hash):
 @app.route('/users/api/v1.0/usuarios/<uid>/avatar/', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
-def agregar_avatar_por_usuario(uid):
+def agregar_avatar_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return agregar_avatar(h)
 
 @app.route('/users/api/v1.0/usuarios/<uid>/avatar/.json', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
-def obtener_avatar_por_usuario(uid):
+def obtener_avatar_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar(h)
 
 @app.route('/users/api/v1.0/usuarios/<uid>/avatar/', methods=['GET'])
 @rs.require_valid_token
-def obtener_avatar_binario_por_usuario(uid):
+def obtener_avatar_binario_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar_binario(h)
 
@@ -137,7 +137,7 @@ def auth(token=None):
 @app.route('/users/api/v1.0/usuarios/<uid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
-def usuarios(uid):
+def usuarios(uid, token=None):
     search = request.args.get('q', None)
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
@@ -160,7 +160,7 @@ def usuarios(uid):
 @app.route('/users/api/v1.0/usuarios/<uid>', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
-def actualizar_usuario(uid):
+def actualizar_usuario(uid, token=None):
     datos = json.loads(request.data)
     session = Session()
     try:
@@ -173,7 +173,7 @@ def actualizar_usuario(uid):
 @app.route('/users/api/v1.0/usuarios/<uid>/claves/', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
-def crear_clave(uid):
+def crear_clave(uid, token=None):
     data = json.loads(request.data)
     if 'clave' not in data:
         abort(400)
@@ -189,7 +189,7 @@ def crear_clave(uid):
 @app.route('/users/api/v1.0/generar_clave/<uid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
-def generar_clave(uid):
+def generar_clave(uid, token=None):
     session = Session()
     try:
         r = UsersModel.generar_clave(session, uid)
@@ -206,7 +206,7 @@ def generar_clave(uid):
 @app.route('/users/api/v1.0/usuarios/<uid>/precondiciones', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
-def precondiciones(uid):
+def precondiciones(uid, token=None):
     precondiciones = {}
 
     session = Session()
@@ -258,7 +258,7 @@ def claves(cid):
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
-def correos_de_usuario(uid, cid):
+def correos_de_usuario(uid, cid, token=None):
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
     h = request.args.get('h',False,bool)
@@ -274,7 +274,7 @@ def correos_de_usuario(uid, cid):
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
-def agregar_correo(uid):
+def agregar_correo(uid, token=None):
     assert uid != None
     datos = json.loads(request.data)
     print(datos)
@@ -295,7 +295,7 @@ def agregar_correo(uid):
 @app.route('/users/api/v1.0/correos/<cid>', methods=['DELETE'])
 @rs.require_valid_token
 @jsonapi
-def eliminar_correo(uid=None, cid=None):
+def eliminar_correo(uid=None, cid=None, token=None):
     session = Session()
     try:
         UsersModel.eliminar_correo(session, cid)
@@ -307,7 +307,7 @@ def eliminar_correo(uid=None, cid=None):
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
-def enviar_confirmar_correo(uid, cid):
+def enviar_confirmar_correo(uid, cid, token=None):
     session = Session()
     try:
         UsersModel.enviar_confirmar_correo(session, cid)
@@ -318,7 +318,7 @@ def enviar_confirmar_correo(uid, cid):
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>/confirmar', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
-def confirmar_correo(uid, cid):
+def confirmar_correo(uid, cid, token=None):
     assert cid is not None
     code = json.loads(request.data)['codigo']
 
@@ -333,7 +333,7 @@ def confirmar_correo(uid, cid):
 @app.route('/users/api/v1.0/correos/<cid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
-def correos(cid):
+def correos(cid, token=None):
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
     h = request.args.get('h',False,bool)
