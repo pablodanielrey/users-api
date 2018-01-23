@@ -14,14 +14,14 @@ from dateutil import parser
 from rest_utils import register_encoder
 
 import oidc
-from oidc.oidc import ResourceServer
+from oidc.oidc import TokenIntrospection
 
 from . import reset
 from users.model import Session
 
 client_id = os.environ['OIDC_CLIENT_ID']
 client_secret = os.environ['OIDC_CLIENT_SECRET']
-rs = ResourceServer(client_id, client_secret)
+rs = TokenIntrospection(client_id, client_secret)
 
 app = Flask(__name__)
 app.debug = True

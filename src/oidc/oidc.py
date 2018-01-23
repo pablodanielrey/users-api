@@ -24,15 +24,15 @@ from flask import redirect, url_for
 
 
 class ClientCredentialsGrant:
-    """
+    '''
         https://tools.ietf.org/html/rfc6749
         sección 4.4
-    """
-    
-    verify = True
-    token_url = os.environ['HYDRA_HOST'] + '/oauth2/token'
+    '''
 
-    def __init__(self, client_id, client_secret):
+    token_url = os.environ['OIDC_HOST'] + '/oauth2/token'
+
+    def __init__(self, client_id, client_secret, verify=True):
+        self.verify = verify
         self.client_id = client_id
         self.client_secret = client_secret
 
@@ -55,9 +55,9 @@ class ClientCredentialsGrant:
         return None
 
 
-class ResourceServer:
+class TokenIntrospection:
 
-    introspect_url = os.environ['HYDRA_HOST'] + '/oauth2/introspect'
+    introspect_url = os.environ['OIDC_HOST'] + '/oauth2/introspect'
 
     def __init__(self, client_id, client_secret, realm='', verify=False):
         self.realm = realm
@@ -68,9 +68,9 @@ class ResourceServer:
     def require_valid_token(self, f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            """
+            '''
                 Recupera y chequea el token por validez
-            """
+            '''
             token = self.bearer_token(flask.request.headers)
             if not token:
                 return self.invalid_token()
@@ -135,6 +135,7 @@ class ResourceServer:
         return (text, status, headers)
 
 
+"""
 class OIDC:
 
     oidc_session = os.environ['OIDC_SESSION']
@@ -216,10 +217,10 @@ class OIDC:
         app.add_url_rule(redirect, 'oidc_callback', self.callback)
 
     def callback(self):
-        """
+        '''
             Callback asociado al flujo de autentificación oauth.
             Obtiene y setea el token dentro de la sesión
-        """
+        '''
         data = flask.session.get(self.oidc_session, None)
         if not data:
             return ('Bad Request', 400)
@@ -247,7 +248,7 @@ class OIDC:
         flask.session[self.oidc_session] = data
         return redirect(redirect_after)
 
-        """
+        '''
         logging.debug(token)
         token['access_token']
         token['expires_in']
@@ -255,14 +256,14 @@ class OIDC:
         token['refresh_token']
         token['scope']
         token['token_type']
-        """
+        '''
 
     def require_login(self, f):
-        """
+        '''
             Verifica que exista un token asociado a la sesión en el servidor para el cliente.
             No verifica la validez del token
             El token es seteado en la sesión en el método callback
-        """
+        '''
         @wraps(f)
         def decorated_function(*args, **kwargs):
             data = flask.session.get(self.oidc_session, None)
@@ -282,3 +283,4 @@ class OIDC:
             return redirect(r,302)
 
         return decorated_function
+"""
