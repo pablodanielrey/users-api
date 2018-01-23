@@ -80,6 +80,7 @@ def obtener_avatar_binario(hash):
     return r
 
 @app.route('/users/api/v1.0/avatar/<hash>', methods=['PUT','POST'])
+@rs.require_valid_token
 @jsonapi
 def agregar_avatar(hash):
     f = request.files['file']
@@ -88,18 +89,21 @@ def agregar_avatar(hash):
     return {'status':'OK','status_code':200}, 200
 
 @app.route('/users/api/v1.0/usuarios/<uid>/avatar/', methods=['PUT','POST'])
+@rs.require_valid_token
 @jsonapi
 def agregar_avatar_por_usuario(uid):
     h = hashlib.md5(uid.encode()).hexdigest()
     return agregar_avatar(h)
 
 @app.route('/users/api/v1.0/usuarios/<uid>/avatar/.json', methods=['GET'])
+@rs.require_valid_token
 @jsonapi
 def obtener_avatar_por_usuario(uid):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar(h)
 
 @app.route('/users/api/v1.0/usuarios/<uid>/avatar/', methods=['GET'])
+@rs.require_valid_token
 def obtener_avatar_binario_por_usuario(uid):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar_binario(h)
@@ -131,6 +135,7 @@ def auth(token=None):
 @app.route('/users/api/v1.0/usuarios', methods=['GET'], defaults={'uid':None})
 @app.route('/users/api/v1.0/usuarios/', methods=['GET'], defaults={'uid':None})
 @app.route('/users/api/v1.0/usuarios/<uid>', methods=['GET'])
+@rs.require_valid_token
 @jsonapi
 def usuarios(uid):
     search = request.args.get('q', None)
@@ -153,6 +158,7 @@ def usuarios(uid):
         session.close()
 
 @app.route('/users/api/v1.0/usuarios/<uid>', methods=['PUT','POST'])
+@rs.require_valid_token
 @jsonapi
 def actualizar_usuario(uid):
     datos = json.loads(request.data)
@@ -165,6 +171,7 @@ def actualizar_usuario(uid):
         session.close()
 
 @app.route('/users/api/v1.0/usuarios/<uid>/claves/', methods=['PUT','POST'])
+@rs.require_valid_token
 @jsonapi
 def crear_clave(uid):
     data = json.loads(request.data)
@@ -180,6 +187,7 @@ def crear_clave(uid):
         session.close()
 
 @app.route('/users/api/v1.0/generar_clave/<uid>', methods=['GET'])
+@rs.require_valid_token
 @jsonapi
 def generar_clave(uid):
     session = Session()
@@ -196,6 +204,7 @@ def generar_clave(uid):
 '''
 
 @app.route('/users/api/v1.0/usuarios/<uid>/precondiciones', methods=['GET'])
+@rs.require_valid_token
 @jsonapi
 def precondiciones(uid):
     precondiciones = {}
@@ -247,6 +256,7 @@ def claves(cid):
 @app.route('/users/api/v1.0/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>', methods=['GET'])
+@rs.require_valid_token
 @jsonapi
 def correos_de_usuario(uid, cid):
     offset = request.args.get('offset',None,int)
@@ -262,6 +272,7 @@ def correos_de_usuario(uid, cid):
         session.close()
 
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/', methods=['PUT','POST'])
+@rs.require_valid_token
 @jsonapi
 def agregar_correo(uid):
     assert uid != None
@@ -282,6 +293,7 @@ def agregar_correo(uid):
 
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>', methods=['DELETE'])
 @app.route('/users/api/v1.0/correos/<cid>', methods=['DELETE'])
+@rs.require_valid_token
 @jsonapi
 def eliminar_correo(uid=None, cid=None):
     session = Session()
@@ -293,6 +305,7 @@ def eliminar_correo(uid=None, cid=None):
 
 
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'])
+@rs.require_valid_token
 @jsonapi
 def enviar_confirmar_correo(uid, cid):
     session = Session()
@@ -303,6 +316,7 @@ def enviar_confirmar_correo(uid, cid):
         session.close()
 
 @app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>/confirmar', methods=['PUT','POST'])
+@rs.require_valid_token
 @jsonapi
 def confirmar_correo(uid, cid):
     assert cid is not None
@@ -317,6 +331,7 @@ def confirmar_correo(uid, cid):
 
 @app.route('/users/api/v1.0/correos/', methods=['GET'], defaults={'cid':None})
 @app.route('/users/api/v1.0/correos/<cid>', methods=['GET'])
+@rs.require_valid_token
 @jsonapi
 def correos(cid):
     offset = request.args.get('offset',None,int)
@@ -342,6 +357,7 @@ def add_header(r):
     return r
 
 
+'''
 @app.route('/rutas', methods=['GET'])
 @jsonapi
 def rutas():
@@ -350,7 +366,7 @@ def rutas():
         url = url_for(rule.endpoint, **(rule.defaults or {}))
         links.append(url)
     return links
-
+'''
 
 
 def main():
