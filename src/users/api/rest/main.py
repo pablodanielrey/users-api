@@ -221,7 +221,7 @@ def precondiciones(uid, token=None):
         precondiciones['correos'] = {'tiene_alternativo':False}
         correos = UsersModel.correos(session, usuario=uid)
         for c in correos:
-            if 'econo.unlp.edu.ar' not in c.email and c.confirmado and c.fecha_confirmado and not c.eliminado:
+            if 'econo.unlp.edu.ar' not in c.email and c.confirmado and not c.eliminado:
                 precondiciones['correos']['tiene_alternativo'] = True
                 break
     finally:

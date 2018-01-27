@@ -28,7 +28,7 @@ class Usuario(Base):
         for m in self.mails:
             if m.eliminado:
                 continue
-            if m.fecha_confirmado and dominio not in m.email:
+            if m.confirmado and dominio not in m.email:
                 return m
         return None
 

@@ -237,8 +237,7 @@ class UsersModel:
         correo = session.query(Mail).filter(Mail.id == cid, Mail.hash == code, Mail.eliminado == None).order_by(Mail.creado.desc()).first()
         if not correo:
             raise CorreoNoEncontradoError()
-        correo.confirmado = True
-        correo.fecha_confirmado = datetime.datetime.now()
+        correo.confirmado = datetime.datetime.now()
 
     @classmethod
     def enviar_confirmar_correo(cls, session, cid):
