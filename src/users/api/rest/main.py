@@ -103,7 +103,6 @@ def obtener_avatar_por_usuario(uid, token=None):
     return obtener_avatar(h)
 
 @app.route('/users/api/v1.0/usuarios/<uid>/avatar/', methods=['GET'])
-@rs.require_valid_token
 def obtener_avatar_binario_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar_binario(h)
