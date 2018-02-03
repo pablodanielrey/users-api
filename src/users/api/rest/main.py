@@ -56,7 +56,8 @@ reset.registrarApiReseteoClave(app)
 
 @app.after_request
 def cors_after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    if not response.headers.get('Access-Control-Allow-Origin',None):
+        response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
     return response
