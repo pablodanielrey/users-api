@@ -127,6 +127,9 @@ def auth(token=None):
     s = Session()
     try:
         return UsersModel.login(s, usuario, clave)
+    except Exception as e:
+        logging.exception(e)
+        raise e
     finally:
         s.close()
 
