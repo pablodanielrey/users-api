@@ -115,7 +115,7 @@ if __name__ == '__main__':
                         cur.execute('insert into users (id, dni, name, lastname) values (%(id)s,%(dni)s,%(name)s,%(lastname)s)', u)
                         conn.commit()
 
-                    cur2.execute('update credentials.users set sincronizado_1 = NOW() where dni = %(dni)s', u)
+                    cur2.execute('update profile.users set sincronizado_1 = NOW() where dni = %(dni)s', u)
                     conn2.commit()
 
                 except Exception as e:
