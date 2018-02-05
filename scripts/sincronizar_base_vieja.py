@@ -106,32 +106,44 @@ if __name__ == '__main__':
         cur2 = conn2.cursor(cursor_factory=DictCursor)
         try:
             ''' sinc usuarios '''
-            cur2.execute('select id, dni, name, lastname from profile.users')
+            cur2.execute('select id, dni, name, lastname from profile.users where sincronizado_1 is null')
             for u in cur2.fetchall():
                 logging.info('sincronizando : {}'.format(u))
                 try:
-                    cur.execute('insert into users (id, dni, name, lastname) values (%(id)s,%(dni)s,%(name)s,%(lastname)s)', u)
-                    conn.commit()
+                    cur.execute('select id from users where dni = %(dni)s', u)
+                    if cur.rowcount <= 0:
+                        cur.execute('insert into users (id, dni, name, lastname) values (%(id)s,%(dni)s,%(name)s,%(lastname)s)', u)
+                        conn.commit()
+
+                    cur2.execute('update credentials.users set sincronizado_1 = NOW() where dni = %(dni)s', u)
+                    conn2.commit()
+
                 except Exception as e:
                     logging.exception(e)
                     conn.rollback()
 
             ''' sinc claves '''
-            cur2.execute('select id, user_id, username, password from credentials.user_password')
+            cur2.execute('select id, user_id, username, password from credentials.user_password where sincronizado_1 is null')
             for u in cur2.fetchall():
                 if u['username'] == u['password']:
                     u['password'] = str(uuid.uuid4())
                     logging.info('reemplazando la clave ya que es igual al nombre de usuario')
                 logging.info('sincronizando : {}'.format(u))
                 try:
-                    cur.execute('insert into user_password (id, user_id, username, password) values (%(id)s,%(user_id)s,%(username)s,%(password)s)', u)
-                    conn.commit()
+                    cur.execute('select id from user_password where username = %(username)s', u)
+                    if cur.rowcount <= 0:
+                        cur.execute('insert into user_password (id, user_id, username, password) values (%(id)s,%(user_id)s,%(username)s,%(password)s)', u)
+                        conn.commit()
+
+                    cur2.execute('update credentials.user_password set sincronizado_1 = NOW() where username = %(username)s', u)
+                    conn2.commit()
+
                 except Exception as e:
                     logging.exception(e)
                     conn.rollback()
 
             ''' sinc correos '''
-            cur2.execute('select id, user_id, email, fecha_confirmado, eliminado, confirmed from profile.mails where eliminado is Null')
+            cur2.execute('select id, user_id, email, fecha_confirmado, eliminado, confirmed from profile.mails where eliminado is Null and sincronizado_1 is Null')
             for u in cur2.fetchall():
                 if not u['fecha_confirmado'] and not u['confirmed']:
                     continue
@@ -140,8 +152,14 @@ if __name__ == '__main__':
 
                 logging.info('sincronizando : {}'.format(u))
                 try:
-                    cur.execute('insert into mails (id, user_id, email, confirmado, eliminado) values (%(id)s,%(user_id)s,%(email)s,%(fecha_confirmado)s,%(eliminado)s)', u)
-                    conn.commit()
+                    cur.execute('select id from mails where email = %(email)s', u)
+                    if cur.rowcount <= 0:
+                        cur.execute('insert into mails (id, user_id, email, confirmado, eliminado) values (%(id)s,%(user_id)s,%(email)s,%(fecha_confirmado)s,%(eliminado)s)', u)
+                        conn.commit()
+
+                    cur2.execute('update profile.mails set sincronizado_1 = NOW() where id = %(id)s', u)
+                    conn2.commit()
+
                 except Exception as e:
                     logging.exception(e)
                     conn.rollback()
