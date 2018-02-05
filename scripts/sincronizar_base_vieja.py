@@ -154,7 +154,7 @@ if __name__ == '__main__':
                 try:
                     cur.execute('select id from mails where email = %(email)s', u)
                     if cur.rowcount <= 0:
-                        cur.execute('insert into mails (id, user_id, email, confirmado, eliminado) values (%(id)s,%(user_id)s,%(email)s,%(fecha_confirmado)s,%(eliminado)s)', u)
+                        cur.execute('insert into mails (id, user_id, email, confirmado, eliminado) values (%(id)s,%(user_id)s,%(email)s,%(fecha_confirmado)s,%(el   iminado)s)', u)
                         conn.commit()
 
                     cur2.execute('update profile.mails set sincronizado_1 = NOW() where id = %(id)s', u)
