@@ -87,6 +87,8 @@ users=# \dt
 
 
 """
+import sys
+sys.exit(1)
 
 if __name__ == '__main__':
     conn = psycopg2.connect("host='{}' user='{}' password='{}' dbname={}".format(

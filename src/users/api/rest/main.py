@@ -145,7 +145,7 @@ def usuarios(uid, token=None):
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
     mostrarClave = request.args.get('c',False,bool)
-
+        
     session = Session()
     try:
         if uid:

@@ -108,55 +108,29 @@ if __name__ == '__main__':
         cur2 = conn2.cursor(cursor_factory=DictCursor)
         try:
             ''' sinc usuarios '''
-            # cur2.execute('select max(u.actualizado), max(u2.creado) from users u inner join users u2 on u.id = u2.id')
+            fecha = datetime.datetime.now() - datetime.timedelta(days=365)
+            cur2.execute('select max(fecha) from scripts')
+            if cur2.rowcount > 0:
+                fecha = cur2.fetchone()[0]
 
-
-            cur2.execute('select id, dni, name, lastname, actualizado, creado from users')
+            cur2.execute('select id, dni, name, lastname, actualizado, creado from users where actualizado > %s or creado > %s', (fecha, fecha))
             for u in cur2.fetchall():
-                sys.stdout.write('.')
-                sys.stdout.flush()
                 try:
-                    if u['actualizado']:
-                        cur.execute('select id from profile.users where dni = %(dni)s and sincronizado_1 < %(actualizado)s', u)
-                    else:
-                        cur.execute('select id from profile.users where dni = %(dni)s and sincronizado_1 < %(creado)s', u)
-                    if cur.rowcount > 0:
-                        logging.info('sincronizando : {}'.format(u))
-                        cur.execute('update profile.users set dni=%(dni)s, name=%(name)s, lastname=%(lastname)s, sincronizado_1=NOW() where id=%(id)s', u)
-                        conn.commit()
+                    logging.info('sincronizando : {}'.format(u))
+                    cur.execute('update profile.users set dni=%(dni)s, name=%(name)s, lastname=%(lastname)s, sincronizado_1=NOW() where id=%(id)s', u)
+                    conn.commit()
 
                 except Exception as e:
                     logging.exception(e)
                     conn.rollback()
 
             ''' sinc claves '''
-
-            ''' chequeo primero si hace falta la sincronizacion '''
-
-            """
-            cur2.execute('select max(u.actualizado), max(u2.creado) from user_password u inner join user_password u2 on u.id = u2.id;')
-            m = cur2.fetchone()
-            fecha = m[0] if m[0] > m[1] else m[1]
-            logging.debug('cheqeuando a ver si existe sincronizacion que sea menor que {}'.format(fecha))
-            cur.execute('select id from profile.users where sincronizado_1 < %s', (fecha,))
-            if cur.rowcount > 0:
-                ''' existe al menos 1 que necesita ser sincronizado '''
-            """
-
-            cur2.execute('select id, user_id, username, password, creado, actualizado from user_password where eliminada is null')
+            cur2.execute('select id, user_id, username, password, creado, actualizado from user_password where actualizado > %s or creado > %s', (fecha, fecha))
             for u in cur2.fetchall():
-                sys.stdout.write('.');
-                sys.stdout.flush()
                 try:
-                    if u['actualizado']:
-                        cur.execute('select id from credentials.user_password where username = %(username)s and sincronizado_1 < %(actualizado)s', u)
-                    else:
-                        cur.execute('select id from credentials.user_password where username = %(username)s and sincronizado_1 < %(creado)s', u)
-                    if cur.rowcount > 0:
-                        logging.debug('.')
-                        logging.debug('actualizando clave : {}'.format(u))
-                        cur.execute('update credentials.user_password set password = %(password)s, sincronizado_1=NOW() where id = %(id)s', u)
-                        conn.commit()
+                    logging.debug('actualizando clave : {}'.format(u))
+                    cur.execute('update credentials.user_password set password = %(password)s, sincronizado_1=NOW() where id = %(id)s', u)
+                    conn.commit()
 
                 except Exception as e:
                     logging.exception(e)
@@ -176,37 +150,24 @@ if __name__ == '__main__':
                 conn.rollback()
 
             ''' actualizo los correos '''
-            ''' chequeo primero si hace falta la sincronizacion '''
+            cur2.execute('select * from mails where eliminado is null and actualizado > %s or creado > %s', (fecha, fecha))
+            for m in cur2.fetchall():
+                try:
+                    cur.execute('select id from profile.mails where id = %(id)s', m)
+                    if cur.rowcount > 0:
+                        logging.info('actualizando mail {}'.format(m))
+                        cur.execute('update profile.mails set actualizado = %(actualizado)s , sincronizado_1=NOW(), email = %(email)s, fecha_confirmado = %(confirmado)s, confirmed = %(confirmado)s is not null where id = %(id)s',m)
+                    else:
+                        logging.info('insertando correo {}'.format(m))
+                        cur.execute("""insert into profile.mails (id, user_id, email, confirmed, hash, creado, actualizado, fecha_confirmado, sincronizado_1) \
+                                    values(%(id)s,%(user_id)s,%(email)s,%(confirmado)s is not null,%(hash)s,%(creado)s,%(actualizado)s,%(confirmado)s,NOW())""", m)
+                    conn.commit()
+                except Exception as e:
+                    logging.exception(e)
+                    conn.rollback()
 
-            cur2.execute('select max(actualizado), max(creado) from mails')
-            m = cur2.fetchone()
-            fecha = m[0] if m[0] > m[1] else m[1]
-            logging.debug('cheqeuando a ver si existe sincronizacion que sea menor que {}'.format(fecha))
-            cur.execute('select id from profile.mails where sincronizado_1 < %s', (fecha,))
-            if cur.rowcount > 0:
-                ''' existe al menos 1 que necesita ser sincronizado '''
-                logging.info("existe al menos 1 que necesita ser sincronizado")
-                cur2.execute('select * from mails where eliminado is null')
-                for m in cur2.fetchall():
-                    logging.info('procesando correo {}'.format(m['email']))
-                    try:
-                        cur.execute('select id, sincronizado_1 from profile.mails where id = %(id)s', m)
-
-                        if cur.rowcount > 0:
-                            c = cur.fetchone()
-                            if (m['actualizado'] and c[1] < m["actualizado"]) or (c[1] < m["creado"]):
-                                logging.info('actualizando mail {}'.format(m['email']))
-                                cur.execute('update profile.mails set actualizado = %(actualizado)s , sincronizado_1=NOW(), email = %(email)s, fecha_confirmado = %(confirmado)s, confirmed = %(confirmado)s is not null where id = %(id)s',m)
-                            else:
-                                cur.execute('update profile.mails set sincronizado_1=NOW() where id = %(id)s',m)
-                        else:
-                            logging.info('creando mail {}'.format(m))
-                            cur.execute("""insert into profile.mails (id, user_id, email, confirmed, hash, creado, actualizado, fecha_confirmado, sincronizado_1) \
-                                        values(%(id)s,%(user_id)s,%(email)s,%(confirmado)s is not null,%(hash)s,%(creado)s,%(actualizado)s,%(confirmado)s,NOW())""", m)
-                        conn.commit()
-                    except Exception as e:
-                        logging.exception(e)
-                        conn.rollback()
+            cur2.execute('insert into scripts (id, fecha) values (%s,NOW())', (str(uuid.uuid4()),))
+            cur2.commit()
 
         finally:
             cur2.close()
