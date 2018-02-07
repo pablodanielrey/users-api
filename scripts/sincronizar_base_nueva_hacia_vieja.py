@@ -107,9 +107,8 @@ if __name__ == '__main__':
         ))
         cur2 = conn2.cursor(cursor_factory=DictCursor)
         try:
-            """
             ''' sinc usuarios '''
-            cur2.execute('select max(u.actualizado), max(u2.creado) from users u inner join users u2 on u.id = u2.id')
+            # cur2.execute('select max(u.actualizado), max(u2.creado) from users u inner join users u2 on u.id = u2.id')
 
 
             cur2.execute('select id, dni, name, lastname, actualizado, creado from users')
@@ -129,12 +128,12 @@ if __name__ == '__main__':
                 except Exception as e:
                     logging.exception(e)
                     conn.rollback()
-            """
 
             ''' sinc claves '''
-            """
+
             ''' chequeo primero si hace falta la sincronizacion '''
 
+            """
             cur2.execute('select max(u.actualizado), max(u2.creado) from user_password u inner join user_password u2 on u.id = u2.id;')
             m = cur2.fetchone()
             fecha = m[0] if m[0] > m[1] else m[1]
@@ -143,6 +142,7 @@ if __name__ == '__main__':
             if cur.rowcount > 0:
                 ''' existe al menos 1 que necesita ser sincronizado '''
             """
+
             cur2.execute('select id, user_id, username, password, creado, actualizado from user_password where eliminada is null')
             for u in cur2.fetchall():
                 sys.stdout.write('.');
@@ -162,28 +162,51 @@ if __name__ == '__main__':
                     logging.exception(e)
                     conn.rollback()
 
+
             ''' sinc correos '''
-            cur2.execute('select id, user_id, email, fecha_confirmado, eliminado, confirmed from profile.mails where eliminado is Null and sincronizado_1 is Null')
-            for u in cur2.fetchall():
-                if not u['fecha_confirmado'] and not u['confirmed']:
-                    continue
-                if not u['fecha_confirmado'] and u['confirmed']:
-                    u['fecha_confirmado'] = datetime.datetime.now()
+            ''' elimino los correos em la base vieja '''
+            cur2.execute('select id from mails where eliminado is not null')
+            try:
+                mids = [m[0] for m in cur2.fetchall()]
+                logging.info('correos que se van a eliminar {}'.format(mids))
+                cur.execute('delete from profile.mails where id in %s', (tuple(mids),))
+                conn.commit()
+            except Exception as e:
+                logging.exception(e)
+                conn.rollback()
 
-                logging.info('sincronizando : {}'.format(u))
-                try:
-                    cur.execute('select id from mails where email = %(email)s', u)
-                    if cur.rowcount <= 0:
-                        cur.execute('insert into mails (id, user_id, email, confirmado, eliminado) values (%(id)s,%(user_id)s,%(email)s,%(fecha_confirmado)s,%(eliminado)s)', u)
+            ''' actualizo los correos '''
+            ''' chequeo primero si hace falta la sincronizacion '''
+
+            cur2.execute('select max(actualizado), max(creado) from mails')
+            m = cur2.fetchone()
+            fecha = m[0] if m[0] > m[1] else m[1]
+            logging.debug('cheqeuando a ver si existe sincronizacion que sea menor que {}'.format(fecha))
+            cur.execute('select id from profile.mails where sincronizado_1 < %s', (fecha,))
+            if cur.rowcount > 0:
+                ''' existe al menos 1 que necesita ser sincronizado '''
+                logging.info("existe al menos 1 que necesita ser sincronizado")
+                cur2.execute('select * from mails where eliminado is null')
+                for m in cur2.fetchall():
+                    logging.info('procesando correo {}'.format(m['email']))
+                    try:
+                        cur.execute('select id, sincronizado_1 from profile.mails where id = %(id)s', m)
+
+                        if cur.rowcount > 0:
+                            c = cur.fetchone()
+                            if (m['actualizado'] and c[1] < m["actualizado"]) or (c[1] < m["creado"]):
+                                logging.info('actualizando mail {}'.format(m['email']))
+                                cur.execute('update profile.mails set actualizado = %(actualizado)s , sincronizado_1=NOW(), email = %(email)s, fecha_confirmado = %(confirmado)s, confirmed = %(confirmado)s is not null where id = %(id)s',m)
+                            else:
+                                cur.execute('update profile.mails set sincronizado_1=NOW() where id = %(id)s',m)
+                        else:
+                            logging.info('creando mail {}'.format(m))
+                            cur.execute("""insert into profile.mails (id, user_id, email, confirmed, hash, creado, actualizado, fecha_confirmado, sincronizado_1) \
+                                        values(%(id)s,%(user_id)s,%(email)s,%(confirmado)s is not null,%(hash)s,%(creado)s,%(actualizado)s,%(confirmado)s,NOW())""", m)
                         conn.commit()
-
-                    cur2.execute('update profile.mails set sincronizado_1 = NOW() where id = %(id)s', u)
-                    conn2.commit()
-
-                except Exception as e:
-                    logging.exception(e)
-                    conn.rollback()
-            """
+                    except Exception as e:
+                        logging.exception(e)
+                        conn.rollback()
 
         finally:
             cur2.close()
