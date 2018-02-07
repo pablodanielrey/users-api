@@ -167,7 +167,7 @@ if __name__ == '__main__':
                     conn.rollback()
 
             cur2.execute('insert into scripts (id, fecha) values (%s,NOW())', (str(uuid.uuid4()),))
-            cur2.commit()
+            conn2.commit()
 
         finally:
             cur2.close()
