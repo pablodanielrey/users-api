@@ -108,66 +108,57 @@ if __name__ == '__main__':
         cur2 = conn2.cursor(cursor_factory=DictCursor)
         try:
             ''' sinc usuarios '''
-            fecha = datetime.datetime.now() - datetime.timedelta(days=365)
             cur2.execute('select max(fecha) from scripts')
             if cur2.rowcount > 0:
                 fecha = cur2.fetchone()[0]
+            if not fecha:
+                fecha = datetime.datetime.now() - datetime.timedelta(days=365)
+            logging.debug('fecha {}'.format(fecha))
+            error = False
 
+            """
             cur2.execute('select id, dni, name, lastname, actualizado, creado from users where actualizado > %s or creado > %s', (fecha, fecha))
             for u in cur2.fetchall():
-                try:
-                    logging.info('sincronizando : {}'.format(u))
-                    cur.execute('update profile.users set dni=%(dni)s, name=%(name)s, lastname=%(lastname)s, sincronizado_1=NOW() where id=%(id)s', u)
-                    conn.commit()
-
-                except Exception as e:
-                    logging.exception(e)
-                    conn.rollback()
+                logging.info('sincronizando : {}'.format(u))
+                cur.execute('update profile.users set dni=%(dni)s, name=%(name)s, lastname=%(lastname)s, sincronizado_1=NOW() where id=%(id)s', u)
+                conn.commit()
+            """
 
             ''' sinc claves '''
             cur2.execute('select id, user_id, username, password, creado, actualizado from user_password where actualizado > %s or creado > %s', (fecha, fecha))
             for u in cur2.fetchall():
-                try:
-                    logging.debug('actualizando clave : {}'.format(u))
-                    cur.execute('update credentials.user_password set password = %(password)s, sincronizado_1=NOW() where id = %(id)s', u)
-                    conn.commit()
-
-                except Exception as e:
-                    logging.exception(e)
-                    conn.rollback()
+                logging.debug('actualizando clave : {}'.format(u))
+                cur.execute('update credentials.user_password set password = %(password)s, sincronizado_1=NOW() where id = %(id)s', u)
+                conn.commit()
 
 
             ''' sinc correos '''
             ''' elimino los correos em la base vieja '''
             cur2.execute('select id from mails where eliminado is not null')
-            try:
-                mids = [m[0] for m in cur2.fetchall()]
-                logging.info('correos que se van a eliminar {}'.format(mids))
-                cur.execute('delete from profile.mails where id in %s', (tuple(mids),))
-                conn.commit()
-            except Exception as e:
-                logging.exception(e)
-                conn.rollback()
+            mids = [m[0] for m in cur2.fetchall()]
+            logging.info('correos que se van a eliminar {}'.format(mids))
+            cur.execute('delete from profile.mails where id in %s', (tuple(mids),))
+            conn.commit()
 
             ''' actualizo los correos '''
             cur2.execute('select * from mails where eliminado is null and actualizado > %s or creado > %s', (fecha, fecha))
             for m in cur2.fetchall():
-                try:
-                    cur.execute('select id from profile.mails where id = %(id)s', m)
-                    if cur.rowcount > 0:
-                        logging.info('actualizando mail {}'.format(m))
-                        cur.execute('update profile.mails set actualizado = %(actualizado)s , sincronizado_1=NOW(), email = %(email)s, fecha_confirmado = %(confirmado)s, confirmed = %(confirmado)s is not null where id = %(id)s',m)
-                    else:
-                        logging.info('insertando correo {}'.format(m))
-                        cur.execute("""insert into profile.mails (id, user_id, email, confirmed, hash, creado, actualizado, fecha_confirmado, sincronizado_1) \
-                                    values(%(id)s,%(user_id)s,%(email)s,%(confirmado)s is not null,%(hash)s,%(creado)s,%(actualizado)s,%(confirmado)s,NOW())""", m)
-                    conn.commit()
-                except Exception as e:
-                    logging.exception(e)
-                    conn.rollback()
+                cur.execute('select id from profile.mails where id = %(id)s', m)
+                if cur.rowcount > 0:
+                    logging.info('actualizando mail {}'.format(m))
+                    cur.execute('update profile.mails set actualizado = %(actualizado)s , sincronizado_1=NOW(), email = %(email)s, fecha_confirmado = %(confirmado)s, confirmed = %(confirmado)s is not null where id = %(id)s',m)
+                else:
+                    logging.info('insertando correo {}'.format(m))
+                    cur.execute("""insert into profile.mails (id, user_id, email, confirmed, hash, creado, actualizado, fecha_confirmado, sincronizado_1) \
+                                values(%(id)s,%(user_id)s,%(email)s,%(confirmado)s is not null,%(hash)s,%(creado)s,%(actualizado)s,%(confirmado)s,NOW())""", m)
+                conn.commit()
+
 
             cur2.execute('insert into scripts (id, fecha) values (%s,NOW())', (str(uuid.uuid4()),))
             conn2.commit()
+
+        except Exception as e:
+            logging.exception(e)
 
         finally:
             cur2.close()
