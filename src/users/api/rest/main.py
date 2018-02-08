@@ -138,6 +138,9 @@ def auth(token=None):
 @app.route('/users/api/v1.0/usuarios', methods=['GET'], defaults={'uid':None})
 @app.route('/users/api/v1.0/usuarios/', methods=['GET'], defaults={'uid':None})
 @app.route('/users/api/v1.0/usuarios/<uid>', methods=['GET'])
+@app.route('/users/api_test/v1.0/usuarios', methods=['GET'], defaults={'uid':None})
+@app.route('/users/api_test/v1.0/usuarios/', methods=['GET'], defaults={'uid':None})
+@app.route('/users/api_test/v1.0/usuarios/<uid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def usuarios(uid, token=None):
@@ -145,7 +148,7 @@ def usuarios(uid, token=None):
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
     mostrarClave = request.args.get('c',False,bool)
-        
+
     session = Session()
     try:
         if uid:
