@@ -116,20 +116,22 @@ if __name__ == '__main__':
             logging.debug('fecha {}'.format(fecha))
             error = False
 
-            """
             cur2.execute('select id, dni, name, lastname, actualizado, creado from users where actualizado > %s or creado > %s', (fecha, fecha))
             for u in cur2.fetchall():
                 logging.info('sincronizando : {}'.format(u))
+                #sys.stdout.write('.')
+                #sys.stdout.flush()
                 cur.execute('update profile.users set dni=%(dni)s, name=%(name)s, lastname=%(lastname)s, sincronizado_1=NOW() where id=%(id)s', u)
-                conn.commit()
-            """
+            conn.commit()
 
             ''' sinc claves '''
             cur2.execute('select id, user_id, username, password, creado, actualizado from user_password where actualizado > %s or creado > %s', (fecha, fecha))
             for u in cur2.fetchall():
                 logging.debug('actualizando clave : {}'.format(u))
+                #sys.stdout.write('.')
+                #sys.stdout.flush()
                 cur.execute('update credentials.user_password set password = %(password)s, sincronizado_1=NOW() where id = %(id)s', u)
-                conn.commit()
+            conn.commit()
 
 
             ''' sinc correos '''
@@ -146,14 +148,19 @@ if __name__ == '__main__':
                 cur.execute('select id from profile.mails where id = %(id)s', m)
                 if cur.rowcount > 0:
                     logging.info('actualizando mail {}'.format(m))
+                    #sys.stdout.write('.')
+                    #sys.stdout.flush()
                     cur.execute('update profile.mails set actualizado = %(actualizado)s , sincronizado_1=NOW(), email = %(email)s, fecha_confirmado = %(confirmado)s, confirmed = %(confirmado)s is not null where id = %(id)s',m)
                 else:
                     logging.info('insertando correo {}'.format(m))
+                    #sys.stdout.write('.')
+                    #sys.stdout.flush()
                     cur.execute("""insert into profile.mails (id, user_id, email, confirmed, hash, creado, actualizado, fecha_confirmado, sincronizado_1) \
                                 values(%(id)s,%(user_id)s,%(email)s,%(confirmado)s is not null,%(hash)s,%(creado)s,%(actualizado)s,%(confirmado)s,NOW())""", m)
-                conn.commit()
+            conn.commit()
 
 
+            logging.debug('escribiendo fecha de sincronizacion {}'.format(fecha))
             cur2.execute('insert into scripts (id, fecha) values (%s,NOW())', (str(uuid.uuid4()),))
             conn2.commit()
 
