@@ -140,9 +140,6 @@ def auth(token=None):
 @app.route(API_BASE + '/usuarios', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/<uid>', methods=['GET'])
-@app.route('/users/api_test/v1.0/usuarios', methods=['GET'], defaults={'uid':None})
-@app.route('/users/api_test/v1.0/usuarios/', methods=['GET'], defaults={'uid':None})
-@app.route('/users/api_test/v1.0/usuarios/<uid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def usuarios(uid, token=None):
