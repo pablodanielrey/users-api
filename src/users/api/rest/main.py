@@ -23,19 +23,21 @@ client_id = os.environ['OIDC_CLIENT_ID']
 client_secret = os.environ['OIDC_CLIENT_SECRET']
 rs = TokenIntrospection(client_id, client_secret)
 
+API_BASE=os.environ['API_BASE']
+
 app = Flask(__name__)
 app.debug = True
 register_encoder(app)
 reset.registrarApiReseteoClave(app)
 
-#@app.route('/users/api/v1.0/usuarios/', methods=['OPTIONS'], defaults={'path':None})
-#@app.route('/users/api/v1.0/usuarios/<string:path>', methods=['OPTIONS'])
-#@app.route('/users/api/v1.0/usuarios/<path:path>', methods=['OPTIONS'])
-#@app.route('/users/api/v1.0/usuarios/<uid>/correos/', methods=['OPTIONS'], defaults={'cid':None})
-#@app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>', methods=['OPTIONS'])
-#@app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['OPTIONS'])
-#@app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>/confirmar', methods=['OPTIONS'])
-#@app.route('/users/api/v1.0/usuarios/<uid>/claves/', methods=['OPTIONS'])
+#@app.route(API_BASE + '/usuarios/', methods=['OPTIONS'], defaults={'path':None})
+#@app.route(API_BASE + '/usuarios/<string:path>', methods=['OPTIONS'])
+#@app.route(API_BASE + '/usuarios/<path:path>', methods=['OPTIONS'])
+#@app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['OPTIONS'], defaults={'cid':None})
+#@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['OPTIONS'])
+#@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['OPTIONS'])
+#@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/confirmar', methods=['OPTIONS'])
+#@app.route(API_BASE + '/usuarios/<uid>/claves/', methods=['OPTIONS'])
 # def options(*args, **kwargs):
 #     '''
 #         para autorizar el CORS
@@ -65,13 +67,13 @@ def cors_after_request(response):
 
 import requests
 
-# @app.route('/users/api/v1.0/avatar/<hash>.json', methods=['GET'])
+# @app.route(API_BASE + '/avatar/<hash>.json', methods=['GET'])
 # @jsonapi
 def obtener_avatar(hash):
     return UsersModel.obtener_avatar(hash=hash)
 
-# @app.route('/users/api/v1.0/avatar/', methods=['GET'], defaults={'hash':None})
-# @app.route('/users/api/v1.0/avatar/<hash>', methods=['GET'])
+# @app.route(API_BASE + '/avatar/', methods=['GET'], defaults={'hash':None})
+# @app.route(API_BASE + '/avatar/<hash>', methods=['GET'])
 def obtener_avatar_binario(hash):
     avatar = obtener_avatar(hash)
     r = make_response()
@@ -80,7 +82,7 @@ def obtener_avatar_binario(hash):
     r.headers['Content-Type'] = avatar['content-type']
     return r
 
-@app.route('/users/api/v1.0/avatar/<hash>', methods=['PUT','POST'])
+@app.route(API_BASE + '/avatar/<hash>', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
 def agregar_avatar(hash, token=None):
@@ -89,27 +91,27 @@ def agregar_avatar(hash, token=None):
     UsersModel.actualizar_avatar(hash, contenido)
     return {'status':'OK','status_code':200}, 200
 
-@app.route('/users/api/v1.0/usuarios/<uid>/avatar/', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>/avatar/', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
 def agregar_avatar_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return agregar_avatar(h)
 
-@app.route('/users/api/v1.0/usuarios/<uid>/avatar/.json', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/avatar/.json', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def obtener_avatar_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar(h)
 
-@app.route('/users/api/v1.0/usuarios/<uid>/avatar/', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/avatar/', methods=['GET'])
 def obtener_avatar_binario_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar_binario(h)
 
 
-@app.route('/users/api/v1.0/auth', methods=['POST'])
+@app.route(API_BASE + '/auth', methods=['POST'])
 @rs.require_valid_token
 @jsonapi
 def auth(token=None):
@@ -135,9 +137,9 @@ def auth(token=None):
         s.close()
 
 
-@app.route('/users/api/v1.0/usuarios', methods=['GET'], defaults={'uid':None})
-@app.route('/users/api/v1.0/usuarios/', methods=['GET'], defaults={'uid':None})
-@app.route('/users/api/v1.0/usuarios/<uid>', methods=['GET'])
+@app.route(API_BASE + '/usuarios', methods=['GET'], defaults={'uid':None})
+@app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
+@app.route(API_BASE + '/usuarios/<uid>', methods=['GET'])
 @app.route('/users/api_test/v1.0/usuarios', methods=['GET'], defaults={'uid':None})
 @app.route('/users/api_test/v1.0/usuarios/', methods=['GET'], defaults={'uid':None})
 @app.route('/users/api_test/v1.0/usuarios/<uid>', methods=['GET'])
@@ -163,7 +165,7 @@ def usuarios(uid, token=None):
     finally:
         session.close()
 
-@app.route('/users/api/v1.0/usuarios/<uid>', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
 def actualizar_usuario(uid, token=None):
@@ -176,7 +178,7 @@ def actualizar_usuario(uid, token=None):
     finally:
         session.close()
 
-@app.route('/users/api/v1.0/usuarios/<uid>/claves/', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>/claves/', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
 def crear_clave(uid, token=None):
@@ -192,7 +194,7 @@ def crear_clave(uid, token=None):
     finally:
         session.close()
 
-@app.route('/users/api/v1.0/generar_clave/<uid>', methods=['GET'])
+@app.route(API_BASE + '/generar_clave/<uid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def generar_clave(uid, token=None):
@@ -209,7 +211,7 @@ def generar_clave(uid, token=None):
     para los chequeos de precondiciones
 '''
 
-@app.route('/users/api/v1.0/usuarios/<uid>/precondiciones', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/precondiciones', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def precondiciones(uid, token=None):
@@ -236,8 +238,8 @@ def precondiciones(uid, token=None):
     return precondiciones
 
 """
-@app.route('/users/api/v1.0/usuarios/<uid>/claves', methods=['GET'])
-@app.route('/users/api/v1.0/usuarios/<uid>/claves/', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/claves', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/claves/', methods=['GET'])
 @jsonapi
 def obtener_claves(uid):
     session = Session()
@@ -248,8 +250,8 @@ def obtener_claves(uid):
 """
 
 """
-@app.route('/users/api/v1.0/claves/', methods=['GET'], defaults={'cid':None})
-@app.route('/users/api/v1.0/claves/<cid>', methods=['GET'])
+@app.route(API_BASE + '/claves/', methods=['GET'], defaults={'cid':None})
+@app.route(API_BASE + '/claves/<cid>', methods=['GET'])
 @jsonapi
 def claves(cid):
     session = Session()
@@ -259,9 +261,9 @@ def claves(cid):
         session.close()
 """
 
-@app.route('/users/api/v1.0/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
-@app.route('/users/api/v1.0/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
-@app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
+@app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
+@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def correos_de_usuario(uid, cid, token=None):
@@ -277,7 +279,7 @@ def correos_de_usuario(uid, cid, token=None):
     finally:
         session.close()
 
-@app.route('/users/api/v1.0/usuarios/<uid>/correos/', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
 def agregar_correo(uid, token=None):
@@ -297,8 +299,8 @@ def agregar_correo(uid, token=None):
     finally:
         session.close()
 
-@app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>', methods=['DELETE'])
-@app.route('/users/api/v1.0/correos/<cid>', methods=['DELETE'])
+@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['DELETE'])
+@app.route(API_BASE + '/correos/<cid>', methods=['DELETE'])
 @rs.require_valid_token
 @jsonapi
 def eliminar_correo(uid=None, cid=None, token=None):
@@ -310,7 +312,7 @@ def eliminar_correo(uid=None, cid=None, token=None):
         session.close()
 
 
-@app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def enviar_confirmar_correo(uid, cid, token=None):
@@ -321,7 +323,7 @@ def enviar_confirmar_correo(uid, cid, token=None):
     finally:
         session.close()
 
-@app.route('/users/api/v1.0/usuarios/<uid>/correos/<cid>/confirmar', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/confirmar', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
 def confirmar_correo(uid, cid, token=None):
@@ -335,8 +337,8 @@ def confirmar_correo(uid, cid, token=None):
     finally:
         session.close()
 
-@app.route('/users/api/v1.0/correos/', methods=['GET'], defaults={'cid':None})
-@app.route('/users/api/v1.0/correos/<cid>', methods=['GET'])
+@app.route(API_BASE + '/correos/', methods=['GET'], defaults={'cid':None})
+@app.route(API_BASE + '/correos/<cid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def correos(cid, token=None):
