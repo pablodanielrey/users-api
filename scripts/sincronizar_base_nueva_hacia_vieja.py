@@ -110,7 +110,7 @@ if __name__ == '__main__':
             ''' sinc usuarios '''
             cur2.execute('select max(fecha) from scripts')
             if cur2.rowcount > 0:
-                fecha = cur2.fetchone()[0]
+                fecha = cur2.fetchone()[0] - datetime.timedelta(hours=3)
             if not fecha:
                 fecha = datetime.datetime.now() - datetime.timedelta(days=365)
             logging.debug('fecha {}'.format(fecha))
@@ -161,7 +161,7 @@ if __name__ == '__main__':
 
 
             logging.debug('escribiendo fecha de sincronizacion {}'.format(fecha))
-            cur2.execute('insert into scripts (id, fecha) values (%s,NOW())', (str(uuid.uuid4()),))
+            cur2.execute('insert into scripts (id, fecha) values (%s,%s)', (str(uuid.uuid4()),datetime.datetime.now()))
             conn2.commit()
 
         except Exception as e:
