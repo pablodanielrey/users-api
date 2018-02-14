@@ -122,6 +122,8 @@ if __name__ == '__main__':
                 #sys.stdout.write('.')
                 #sys.stdout.flush()
                 cur.execute('update profile.users set dni=%(dni)s, name=%(name)s, lastname=%(lastname)s, sincronizado_1=NOW() where id=%(id)s', u)
+                if cur.rowcount <= 0:
+                    cur.execute('insert into profile.users (id,dni,name,lastname,sincronizado_1) values (%(id)s, %(dni)s, %(name)s, %(lastname)s, NOW())', u)
             conn.commit()
 
             ''' sinc claves '''
@@ -131,6 +133,8 @@ if __name__ == '__main__':
                 #sys.stdout.write('.')
                 #sys.stdout.flush()
                 cur.execute('update credentials.user_password set password = %(password)s, sincronizado_1=NOW() where id = %(id)s', u)
+                if cur.rowcount <= 0:
+                    cur.execute('insert into credentials.user_password (id, user_id, username, password, sincronizado_1) values (%(id)s, %(user_id)s, %(username)s, %(password)s, NOW())', u)
             conn.commit()
 
 
