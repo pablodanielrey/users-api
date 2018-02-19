@@ -233,6 +233,7 @@ class UsersModel:
         mail = Mail(email=datos['email'].lower())
         mail.id = str(uuid.uuid4())
         mail.usuario_id = uid
+        mail.confirmado = datetime.datetime.now()
         session.add(mail)
         return mail
 

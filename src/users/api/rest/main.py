@@ -291,20 +291,11 @@ def agregar_correo_institucional(uid, token=None):
 
         mail = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=datos['correo'])
         if not mail:
-            logging.debug('\n\n\n')
-            logging.debug(mail)
             mail = UsersModel.agregar_correo_institucional(session=session, uid=uid, datos={'email':datos['correo']})
             session.commit()
         else:
-            logging.debug('\n\n\n\n')
-            logging.debug(json.dumps(mail))
             mail.confirmado = datetime.datetime.now()
             session.commit()
-            logging.debug(json.dumps(mail))
-        #else:
-        #    if not mail.confirmado or mail.eliminado:
-        #        mail.confirmado = datetime.datetime.now()
-        #        mail.eliminado = None
         return mail.id
 
     except Exception as e:
@@ -314,10 +305,6 @@ def agregar_correo_institucional(uid, token=None):
 
     finally:
         session.close()
-
-
-
-
 
 @app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['PUT','POST'])
 @rs.require_valid_token
@@ -344,10 +331,14 @@ def agregar_correo(uid, token=None):
 @rs.require_valid_token
 @jsonapi
 def eliminar_correo(uid=None, cid=None, token=None):
+    assert uid != None
+    assert cid != None
     session = Session()
     try:
         UsersModel.eliminar_correo(session, cid)
         session.commit()
+        return {'id':cid}
+    
     finally:
         session.close()
 
