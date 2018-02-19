@@ -9,6 +9,7 @@ from flask import Flask, abort, make_response, jsonify, url_for, request, json, 
 from users.model import UsersModel
 from flask_jsontools import jsonapi
 from dateutil import parser
+import datetime
 
 
 from rest_utils import register_encoder
@@ -270,6 +271,40 @@ def correos_de_usuario(uid, cid, token=None):
     session = Session()
     try:
         return UsersModel.correos(session=session, usuario=uid, historico=h, offset=offset, limit=limit)
+    except Exception as e:
+        logging.exception(e)
+        raise e
+    finally:
+        session.close()
+
+@app.route(API_BASE + '/usuarios/<uid>/correo', methods=['PUT','POST'])
+@rs.require_valid_token
+@jsonapi
+def agregar_correo_institucional(uid, token=None):
+    assert uid != None
+    datos = json.loads(request.data)
+    assert datos['correo'] != None
+    print(datos)
+    session = Session()
+    try:
+        if not UsersModel.existe(session=session, usuario=uid):
+            raise Exception('Usuario no existente')
+
+        mail = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=datos['correo'])
+        if mail:
+            if not mail.confirmado or not mail.eliminado:
+                mail.confirmado = datetime.datetime.now()
+                mail.eliminado = None
+
+        if not mail:
+            cid = UsersModel.agregar_correo_institucional(session=session, uid=uid, datos={'email':datos['correo']})
+            logging.debug('Correo agregado : {}'.format(cid))
+
+        session.rollback();
+
+        return mail
+
+
     except Exception as e:
         logging.exception(e)
         raise e

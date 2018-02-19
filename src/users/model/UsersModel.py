@@ -219,6 +219,24 @@ class UsersModel:
 
 
     @classmethod
+    def agregar_correo_institucional(cls, session, uid, datos):
+        assert 'email' in datos
+        assert len(datos['email'].strip()) > 0
+
+        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == datos['email'], Mail.eliminado == None).order_by(Mail.creado.desc()).all()
+        for m in mails:
+            ''' ya existe, no lo agrego pero no tiro error '''
+            if not m.confirmado:
+                m.confirmado = datetime.datetime.now()
+            return m.id
+        mail = Mail(email=datos['email'].lower())
+        mail.id = str(uuid.uuid4())
+        mail.usuario_id = uid
+        session.add(mail)
+        return mail.id
+
+
+    @classmethod
     def agregar_correo(cls, session, uid, datos):
         assert 'email' in datos
         assert len(datos['email'].strip()) > 0
@@ -231,6 +249,7 @@ class UsersModel:
         mail = Mail(email=datos['email'].lower())
         mail.id = str(uuid.uuid4())
         usuario.mails.append(mail)
+        session.add(mail)
         return mail.id
 
     @classmethod
