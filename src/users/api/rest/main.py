@@ -305,7 +305,7 @@ def agregar_correo_institucional(uid, token=None):
         #    if not mail.confirmado or mail.eliminado:
         #        mail.confirmado = datetime.datetime.now()
         #        mail.eliminado = None
-        return mail
+        return mail.id
 
     except Exception as e:
         session.rollback()
