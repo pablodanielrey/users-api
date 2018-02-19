@@ -199,7 +199,7 @@ def generar_clave(uid, token=None):
     try:
         r = UsersModel.generar_clave(session, uid)
         session.commit()
-        return {'uid':uid,'clave:': r}
+        return {'uid':uid,'clave': r}
     finally:
         session.close()
 
