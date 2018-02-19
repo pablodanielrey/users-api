@@ -348,6 +348,21 @@ def correos(cid, token=None):
     finally:
         session.close()
 
+@app.route(API_BASE + '/correo/<cuenta>', methods=['GET'])
+@rs.require_valid_token
+@jsonapi
+def obtenerCorreo(cuenta, token=None):
+    session = Session()
+    try:
+        correo = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=cuenta)
+        if correo:
+            return {existe:True, correo: correo}
+        else:
+            return {existe:False, correo:None}
+    finally:
+        session.close()
+
+
 
 @app.after_request
 def add_header(r):

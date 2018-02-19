@@ -213,6 +213,12 @@ class UsersModel:
         return q.all()
 
     @classmethod
+    def obtener_correo_por_cuenta(cls, session, cuenta):
+        q = session.query(Mail).filter(Mail.email == cuenta, Mail.eliminado == None)
+        return q.one_or_none()
+
+
+    @classmethod
     def agregar_correo(cls, session, uid, datos):
         assert 'email' in datos
         assert len(datos['email'].strip()) > 0
