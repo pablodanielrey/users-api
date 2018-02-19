@@ -356,9 +356,9 @@ def obtenerCorreo(cuenta, token=None):
     try:
         correo = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=cuenta)
         if correo:
-            return {existe:True, correo: correo}
+            return {'existe':True, 'correo': correo}
         else:
-            return {existe:False, correo:None}
+            return {'existe':False, 'correo':None}
     finally:
         session.close()
 
