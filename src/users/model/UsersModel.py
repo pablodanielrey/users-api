@@ -229,11 +229,12 @@ class UsersModel:
             if not m.confirmado:
                 m.confirmado = datetime.datetime.now()
             return m.id
+
         mail = Mail(email=datos['email'].lower())
         mail.id = str(uuid.uuid4())
         mail.usuario_id = uid
         session.add(mail)
-        return mail.id
+        return mail
 
 
     @classmethod

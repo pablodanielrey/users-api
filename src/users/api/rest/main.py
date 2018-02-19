@@ -284,32 +284,40 @@ def agregar_correo_institucional(uid, token=None):
     assert uid != None
     datos = json.loads(request.data)
     assert datos['correo'] != None
-    print(datos)
     session = Session()
     try:
         if not UsersModel.existe(session=session, usuario=uid):
             raise Exception('Usuario no existente')
 
         mail = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=datos['correo'])
-        if mail:
-            if not mail.confirmado or not mail.eliminado:
-                mail.confirmado = datetime.datetime.now()
-                mail.eliminado = None
-
         if not mail:
-            cid = UsersModel.agregar_correo_institucional(session=session, uid=uid, datos={'email':datos['correo']})
-            logging.debug('Correo agregado : {}'.format(cid))
-
-        session.rollback();
-
+            logging.debug('\n\n\n')
+            logging.debug(mail)
+            mail = UsersModel.agregar_correo_institucional(session=session, uid=uid, datos={'email':datos['correo']})
+            session.commit()
+        else:
+            logging.debug('\n\n\n\n')
+            logging.debug(json.dumps(mail))
+            mail.confirmado = datetime.datetime.now()
+            session.commit()
+            logging.debug(json.dumps(mail))
+        #else:
+        #    if not mail.confirmado or mail.eliminado:
+        #        mail.confirmado = datetime.datetime.now()
+        #        mail.eliminado = None
         return mail
 
-
     except Exception as e:
+        session.rollback()
         logging.exception(e)
         raise e
+
     finally:
         session.close()
+
+
+
+
 
 @app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['PUT','POST'])
 @rs.require_valid_token
