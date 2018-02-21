@@ -122,9 +122,11 @@ class UsersModel:
             uclave.actualizado = datetime.datetime.now()
             uclave.debe_cambiarla = True
         else:
-            if session.query(Usuario).filter(Usuario.id == uid).count() <= 0:
+            q = session.query(Usuario).filter(Usuario.id == uid)
+            u = q.one_or_none()
+            if u:
                 raise UsersError(status_code=404)
-            uuclave = UsuarioClave(usuario_id=uid, nombre_de_usuario=dni, clave=clave)
+            uuclave = UsuarioClave(usuario_id=uid, nombre_de_usuario=u.dni, clave=clave)
             uuclave.debe_cambiarla = True
             session.add(uuclave)
         return clave
