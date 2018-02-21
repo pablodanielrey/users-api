@@ -338,7 +338,7 @@ def eliminar_correo(uid=None, cid=None, token=None):
         UsersModel.eliminar_correo(session, cid)
         session.commit()
         return {'id':cid}
-    
+
     finally:
         session.close()
 
