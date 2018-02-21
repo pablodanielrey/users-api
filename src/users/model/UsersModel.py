@@ -166,9 +166,17 @@ class UsersModel:
     @classmethod
     def encontrarUsuariosModificadosDesde(cls, session, fecha, offset=None, limit=None):
         q = session.query(Usuario)
-        q = q.options(joinedload('telefonos'))
-        q = q.join(Mail).filter(Mail.eliminado == None).options(contains_eager(Usuario.mails))
-        q = q.join(UsuarioClave).filter(and_(UsuarioClave.eliminada == None, or_(Usuario.actualizado >= fecha, Usuario.creado >= fecha, UsuarioClave.actualizado >= fecha, UsuarioClave.creado >= fecha))).options(contains_eager(Usuario.claves))
+        q = q.filter(or_(Usuario.actualizado >= fecha, Usuario.creado >= fecha))
+
+        q3 = session.query(UsuarioClave.usuario_id).filter(or_(UsuarioClave.actualizado >= fecha, UsuarioClave.creado >= fecha, UsuarioClave.eliminada >= fecha))
+        q2 = session.query(Usuario).filter(Usuario.id.in_(q3))
+
+        q4 = session.query(Mail.usuario_id).filter(or_(Mail.actualizado >= fecha, Mail.creado >= fecha, Mail.eliminado >= fecha))
+        q5 = session.query(Usuario).filter(Usuario.id.in_(q4))
+
+        q = q.union(q2)
+
+        q = q.options(joinedload('telefonos'), joinedload('mails'), joinedload('claves'))
         q = cls._aplicar_filtros_comunes(q, offset, limit)
         return q.all()
 
@@ -183,10 +191,14 @@ class UsersModel:
         )) if search else q
 
         if retornarClave:
-            q = q.join(UsuarioClave).filter(UsuarioClave.eliminada == None).options(contains_eager(Usuario.claves))
+        #    #q = q.join(UsuarioClave).filter(or_(Usuario.claves == None, UsuarioClave.eliminada == None)).options(contains_eager(Usuario.claves))
+        #    q = q.join(UsuarioClave).options(contains_eager(Usuario.claves))
+            q = q.options(joinedload('claves'))
 
         q = q.options(joinedload('telefonos'))
-        q = q.join(Mail).filter(Mail.eliminado == None).options(contains_eager(Usuario.mails))
+        q = q.options(joinedload('mails'))
+        #q = q.join(Mail).filter(or_(Usuario.mails == None, Mail.eliminado == None)).options(contains_eager(Usuario.mails))
+        #q = q.join(Mail).options(contains_eager(Usuario.mails))
         q = cls._aplicar_filtros_comunes(q, offset, limit)
         return q.all()
 
@@ -215,6 +227,32 @@ class UsersModel:
         return q.all()
 
     @classmethod
+    def obtener_correo_por_cuenta(cls, session, cuenta):
+        q = session.query(Mail).filter(Mail.email == cuenta, Mail.eliminado == None)
+        return q.one_or_none()
+
+
+    @classmethod
+    def agregar_correo_institucional(cls, session, uid, datos):
+        assert 'email' in datos
+        assert len(datos['email'].strip()) > 0
+
+        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == datos['email'], Mail.eliminado == None).order_by(Mail.creado.desc()).all()
+        for m in mails:
+            ''' ya existe, no lo agrego pero no tiro error '''
+            if not m.confirmado:
+                m.confirmado = datetime.datetime.now()
+            return m.id
+
+        mail = Mail(email=datos['email'].lower())
+        mail.id = str(uuid.uuid4())
+        mail.usuario_id = uid
+        mail.confirmado = datetime.datetime.now()
+        session.add(mail)
+        return mail
+
+
+    @classmethod
     def agregar_correo(cls, session, uid, datos):
         assert 'email' in datos
         assert len(datos['email'].strip()) > 0
@@ -227,6 +265,7 @@ class UsersModel:
         mail = Mail(email=datos['email'].lower())
         mail.id = str(uuid.uuid4())
         usuario.mails.append(mail)
+        session.add(mail)
         return mail.id
 
     @classmethod

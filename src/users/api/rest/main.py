@@ -9,6 +9,7 @@ from flask import Flask, abort, make_response, jsonify, url_for, request, json, 
 from users.model import UsersModel
 from flask_jsontools import jsonapi
 from dateutil import parser
+import datetime
 
 
 from rest_utils import register_encoder
@@ -199,7 +200,7 @@ def generar_clave(uid, token=None):
     try:
         r = UsersModel.generar_clave(session, uid)
         session.commit()
-        return {'uid':uid,'clave:': r}
+        return {'uid':uid,'clave': r}
     finally:
         session.close()
 
@@ -276,6 +277,35 @@ def correos_de_usuario(uid, cid, token=None):
     finally:
         session.close()
 
+@app.route(API_BASE + '/usuarios/<uid>/correo', methods=['PUT','POST'])
+@rs.require_valid_token
+@jsonapi
+def agregar_correo_institucional(uid, token=None):
+    assert uid != None
+    datos = json.loads(request.data)
+    assert datos['correo'] != None
+    session = Session()
+    try:
+        if not UsersModel.existe(session=session, usuario=uid):
+            raise Exception('Usuario no existente')
+
+        mail = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=datos['correo'])
+        if not mail:
+            mail = UsersModel.agregar_correo_institucional(session=session, uid=uid, datos={'email':datos['correo']})
+            session.commit()
+        else:
+            mail.confirmado = datetime.datetime.now()
+            session.commit()
+        return mail.id
+
+    except Exception as e:
+        session.rollback()
+        logging.exception(e)
+        raise e
+
+    finally:
+        session.close()
+
 @app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
@@ -301,10 +331,14 @@ def agregar_correo(uid, token=None):
 @rs.require_valid_token
 @jsonapi
 def eliminar_correo(uid=None, cid=None, token=None):
+    assert uid != None
+    assert cid != None
     session = Session()
     try:
         UsersModel.eliminar_correo(session, cid)
         session.commit()
+        return {'id':cid}
+
     finally:
         session.close()
 
@@ -347,6 +381,21 @@ def correos(cid, token=None):
         return UsersModel.correos(session=session, historico=h, offset=offset, limit=limit)
     finally:
         session.close()
+
+@app.route(API_BASE + '/correo/<cuenta>', methods=['GET'])
+@rs.require_valid_token
+@jsonapi
+def obtenerCorreo(cuenta, token=None):
+    session = Session()
+    try:
+        correo = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=cuenta)
+        if correo:
+            return {'existe':True, 'correo': correo}
+        else:
+            return {'existe':False, 'correo':None}
+    finally:
+        session.close()
+
 
 
 @app.after_request

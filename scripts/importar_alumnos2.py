@@ -23,8 +23,8 @@ if __name__ == '__main__':
                 cr = csv.reader(f,delimiter=',')
                 for a in cr:
                     logging.info(a)
-                    nombe = a[1].split(',')[0].strip().capitalize()
-                    apellido = a[1].split(',')[1].strip().capitalize()
+                    nombre = a[1].strip().capitalize()
+                    apellido = a[0].strip().capitalize()
                     dni = a[3].lower().strip()
                     uid = str(uuid.uuid4())
                     logging.info('importando {} {} {}'.format(nombre, apellido, dni))
