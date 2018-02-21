@@ -115,6 +115,7 @@ class UsersModel:
     @classmethod
     def generar_clave(cls, session, uid):
         assert uid is not None
+        logging.debug(uid)
         clave=str(uuid.uuid4()).replace('-','')[0:8]
         uclave = session.query(UsuarioClave).filter(UsuarioClave.usuario_id == uid).one_or_none()
         if uclave:
@@ -124,7 +125,7 @@ class UsersModel:
         else:
             q = session.query(Usuario).filter(Usuario.id == uid)
             u = q.one_or_none()
-            if u:
+            if not u:
                 raise UsersError(status_code=404)
             uuclave = UsuarioClave(usuario_id=uid, nombre_de_usuario=u.dni, clave=clave)
             uuclave.debe_cambiarla = True
@@ -174,7 +175,7 @@ class UsersModel:
         q4 = session.query(Mail.usuario_id).filter(or_(Mail.actualizado >= fecha, Mail.creado >= fecha, Mail.eliminado >= fecha))
         q5 = session.query(Usuario).filter(Usuario.id.in_(q4))
 
-        q = q.union(q2)
+        q = q.union(q2).union(q5)
 
         q = q.options(joinedload('telefonos'), joinedload('mails'), joinedload('claves'))
         q = cls._aplicar_filtros_comunes(q, offset, limit)

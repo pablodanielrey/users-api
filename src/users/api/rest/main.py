@@ -198,9 +198,12 @@ def crear_clave(uid, token=None):
 def generar_clave(uid, token=None):
     session = Session()
     try:
+        logging.debug(uid)
         r = UsersModel.generar_clave(session, uid)
         session.commit()
         return {'uid':uid,'clave': r}
+    except Exception as e:
+        logging.exception(e)
     finally:
         session.close()
 
