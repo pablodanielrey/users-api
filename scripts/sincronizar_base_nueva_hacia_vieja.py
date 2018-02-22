@@ -4,6 +4,9 @@ import os
 import uuid
 import datetime
 import logging
+
+hdr = logging.FileHandler('/tmp/base.sync.log')
+logging.getLogger().addHandler(hdr)
 logging.getLogger().setLevel(logging.DEBUG)
 
 """
@@ -87,24 +90,35 @@ users=# \dt
 
 
 """
+from psycopg2.extras import LoggingConnection
 
 if __name__ == '__main__':
     import sys
 
-    conn = psycopg2.connect("host='{}' user='{}' password='{}' dbname={}".format(
+    dsn = "host='{}' user='{}' password='{}' dbname={}".format(
         os.environ['OLD_USERS_DB_HOST'],
         os.environ['OLD_USERS_DB_USER'],
         os.environ['OLD_USERS_DB_PASSWORD'],
         os.environ['OLD_USERS_DB_NAME']
-    ))
+    )
+    conn = psycopg2.connect(dsn)
+    logfile = open('/tmp/db.log', 'a')
+    conn = LoggingConnection(dsn)
+    conn.initialize(logfile)
+
+
     cur = conn.cursor()
     try:
-        conn2 = psycopg2.connect("host='{}' user='{}' password='{}' dbname={}".format(
+        dsn2 = "host='{}' user='{}' password='{}' dbname={}".format(
             os.environ['USERS_DB_HOST'],
             os.environ['USERS_DB_USER'],
             os.environ['USERS_DB_PASSWORD'],
             os.environ['USERS_DB_NAME']
-        ))
+        )
+        conn2 = psycopg2.connect(dsn2)
+        logfile2 = open('/tmp/db_new.log', 'a')
+        conn2 = LoggingConnection(dsn2)
+        conn2.initialize(logfile2)
         cur2 = conn2.cursor(cursor_factory=DictCursor)
         try:
             ''' sinc usuarios '''
@@ -144,10 +158,12 @@ if __name__ == '__main__':
             mids = [m[0] for m in cur2.fetchall()]
             logging.info('correos que se van a eliminar {}'.format(mids))
             cur.execute('delete from profile.mails where id in %s', (tuple(mids),))
+            logging.info(cur.rowcount)
             conn.commit()
 
             ''' actualizo los correos '''
-            cur2.execute('select * from mails where eliminado is null and actualizado > %s or creado > %s', (fecha, fecha))
+            logging.info(' =========== actualizo los correos ======================')
+            cur2.execute('select * from mails where eliminado is null and (actualizado > %s or creado > %s)', (fecha, fecha))
             for m in cur2.fetchall():
                 cur.execute('select id from profile.mails where id = %(id)s', m)
                 if cur.rowcount > 0:
