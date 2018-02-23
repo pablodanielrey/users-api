@@ -145,9 +145,12 @@ class UsersModel:
             raise FormatoIncorrecto()
         apellido = g2.group()
 
+        legajo = datos['legajo']
+
         usuario = session.query(Usuario).filter(Usuario.id == uid).one()
         usuario.nombre = nombre
         usuario.apellido = apellido
+        usuario.legajo = legajo
 
     @classmethod
     def usuario(cls, session, uid=None, dni=None, retornarClave=False):
