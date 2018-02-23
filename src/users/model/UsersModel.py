@@ -134,6 +134,8 @@ class UsersModel:
 
     @classmethod
     def crear_usuario(cls, session, usuario):
+        if session.query(Usuario).filter(Usuario.dni == usuario['dni']).count() > 0:
+            raise Exception('Usuario existente')
         u = Usuario()
         u.nombre = usuario['nombre']
         u.apellido = usuario['apellido']

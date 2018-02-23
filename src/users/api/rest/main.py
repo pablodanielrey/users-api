@@ -167,7 +167,8 @@ def usuarios(uid, token=None):
 @rs.require_valid_token
 @jsonapi
 def crear_usuario(token=None):
-    usuario = json.loads(request.data)
+    usuario = request.get_json()
+    logging.debug(usuario)
     session = Session()
     try:
         uid = UsersModel.crear_usuario(session, usuario)
