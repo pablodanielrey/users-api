@@ -163,6 +163,20 @@ def usuarios(uid, token=None):
     finally:
         session.close()
 
+@app.route(API_BASE + '/usuarios', methods=['PUT'])
+@rs.require_valid_token
+@jsonapi
+def crear_usuario(token=None):
+    usuario = json.loads(request.data)
+    session = Session()
+    try:
+        uid = UsersModel.crear_usuario(session, usuario)
+        session.commit()
+        return uid
+
+    finally:
+        session.close()
+
 @app.route(API_BASE + '/usuarios/<uid>', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi

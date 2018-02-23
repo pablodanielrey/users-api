@@ -133,6 +133,17 @@ class UsersModel:
         return clave
 
     @classmethod
+    def crear_usuario(cls, session, usuario):
+        u = Usuario()
+        u.nombre = usuario['nombre']
+        u.apellido = usuario['apellido']
+        u.dni = usuario['dni']
+        u.legajo = usuario['legajo']
+        u.id = str(uuid.uuid4())
+        session.add(u)
+        return u.id
+
+    @classmethod
     def actualizar_usuario(cls, session, uid, datos):
         import re
         g = re.match('((\w)*\s*)*', datos['nombre'])
