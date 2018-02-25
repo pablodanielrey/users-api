@@ -35,7 +35,7 @@ if __name__ == '__main__':
                         logging.info('actualizando {}'.format(uid))
                         cur.execute('update users set legajo = %s where id = %s', (legajo, uid))
 
-            #conn.commit()
+            conn.commit()
 
         except Exception as e:
             logging.exception(e)
