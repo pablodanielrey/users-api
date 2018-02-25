@@ -138,6 +138,7 @@ if __name__ == '__main__':
         conn2.initialize(logfile2)
         cur2 = conn2.cursor(cursor_factory=DictCursor)
         try:
+            fecha = None
             ''' sinc usuarios '''
             cur2.execute('select max(fecha) from scripts')
             if cur2.rowcount > 0:
@@ -157,7 +158,7 @@ if __name__ == '__main__':
                     cur.execute('insert into profile.users (id,dni,name,lastname,sincronizado_1) values (%(id)s, %(dni)s, %(name)s, %(lastname)s, NOW())', u)
                 cur.execute('update students.users set student_number=%(legajo)s where id=%(id)s', u)
                 if cur.rowcount <= 0:
-                    cur.execute('insert into student.users (id,legajo) values (%(id)s, %(legajo)s)', u)
+                    cur.execute('insert into students.users (id,student_number) values (%(id)s, %(legajo)s)', u)
 
 
             conn.commit()
