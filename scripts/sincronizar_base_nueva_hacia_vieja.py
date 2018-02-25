@@ -77,6 +77,23 @@ logging.getLogger().setLevel(logging.DEBUG)
  autogenerada   | boolean                     | default false
 
 
+dcsys=# \d students.users
+             Table "students.users"
+     Column     |       Type        | Modifiers
+----------------+-------------------+-----------
+ id             | character varying | not null
+ student_number | character varying |
+ condition      | character varying |
+Indexes:
+    "users_pkey" PRIMARY KEY, btree (id)
+    "users_student_number_key" UNIQUE CONSTRAINT, btree (student_number)
+Foreign-key constraints:
+    "users_id_fkey" FOREIGN KEY (id) REFERENCES profile.users(id)
+
+dcsys=#
+
+
+
 hacia estas tablas:
 
 users=# \dt
@@ -130,7 +147,7 @@ if __name__ == '__main__':
             logging.debug('fecha {}'.format(fecha))
             error = False
 
-            cur2.execute('select id, dni, name, lastname, actualizado, creado from users where actualizado > %s or creado > %s', (fecha, fecha))
+            cur2.execute('select id, dni, name, lastname, legajo, actualizado, creado from users where actualizado > %s or creado > %s', (fecha, fecha))
             for u in cur2.fetchall():
                 logging.info('sincronizando : {}'.format(u))
                 #sys.stdout.write('.')
@@ -138,6 +155,11 @@ if __name__ == '__main__':
                 cur.execute('update profile.users set dni=%(dni)s, name=%(name)s, lastname=%(lastname)s, sincronizado_1=NOW() where id=%(id)s', u)
                 if cur.rowcount <= 0:
                     cur.execute('insert into profile.users (id,dni,name,lastname,sincronizado_1) values (%(id)s, %(dni)s, %(name)s, %(lastname)s, NOW())', u)
+                cur.execute('update students.users set student_number=%(legajo)s where id=%(id)s', u)
+                if cur.rowcount <= 0:
+                    cur.execute('insert into student.users (id,legajo) values (%(id)s, %(legajo)s)', u)
+
+
             conn.commit()
 
             ''' sinc claves '''
