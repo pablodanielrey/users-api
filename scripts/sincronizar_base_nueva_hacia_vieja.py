@@ -169,7 +169,7 @@ if __name__ == '__main__':
                 logging.debug('actualizando clave : {}'.format(u))
                 #sys.stdout.write('.')
                 #sys.stdout.flush()
-                cur.execute('update credentials.user_password set password = %(password)s, sincronizado_1=NOW() where id = %(id)s', u)
+                cur.execute('update credentials.user_password set password = %(password)s, sincronizado_1=NOW() where user_id = %(user_id)s', u)
                 if cur.rowcount <= 0:
                     cur.execute('insert into credentials.user_password (id, user_id, username, password, sincronizado_1) values (%(id)s, %(user_id)s, %(username)s, %(password)s, NOW())', u)
             conn.commit()
