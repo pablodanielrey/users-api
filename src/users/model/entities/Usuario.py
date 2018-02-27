@@ -8,7 +8,7 @@ class Usuario(Base):
 
     __tablename__ = 'users'
 
-    dni = Column('dni', String)
+    dni = Column('dni', String, unique=True, nullable=False)
     nombre = Column('name', String)
     apellido = Column('lastname', String)
     genero = Column('gender', String)
@@ -19,7 +19,7 @@ class Usuario(Base):
     tipo = Column('type', String)
     google = Column('google', Boolean)
     avatar = Column(String)
-    legajo = Column(String)
+    legajo = Column(String, unique=True)
 
     mails = relationship('Mail', back_populates='usuario')
     telefonos = relationship('Telefono', back_populates='usuario')

@@ -134,19 +134,38 @@ class UsersModel:
 
     @classmethod
     def crear_usuario(cls, session, usuario):
-        if session.query(Usuario).filter(Usuario.dni == usuario['dni']).count() > 0:
+        dni = usuario['dni']
+        if not dni:
+            raise Exception('dni = null')
+        if ' ' in dni:
+            raise Exception('dni con caracteres inválidos')
+        dni = dni.replace('.','').lower()
+
+        if session.query(Usuario).filter(Usuario.dni == dni).count() > 0:
             raise Exception('Usuario existente')
+
+        legajo = usuario['legajo']
+        if legajo:
+            legajo = legajo.replace(' ','')
+            if legajo == '':
+                raise Exception('legajo inválido')
+
+            if session.query(Usuario).filter(Usuario.legajo == legajo).count() > 0:
+                raise Exception('Legajo existente')
+
         u = Usuario()
         u.nombre = usuario['nombre']
         u.apellido = usuario['apellido']
-        u.dni = usuario['dni']
-        u.legajo = usuario['legajo']
+        u.dni = dni
+        u.legajo = legajo
         u.id = str(uuid.uuid4())
         session.add(u)
         return u.id
 
     @classmethod
     def actualizar_usuario(cls, session, uid, datos):
+        assert uid is not None
+
         import re
         g = re.match('((\w)*\s*)*', datos['nombre'])
         if not g:
