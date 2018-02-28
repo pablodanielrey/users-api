@@ -23,15 +23,16 @@ if __name__ == '__main__':
                 cr = csv.reader(f,delimiter=',')
                 for a in cr:
                     logging.info(a)
-                    nombre = a[1].strip().capitalize()
-                    apellido = a[0].strip().capitalize()
-                    dni = a[3].lower().strip()
+                    nombre = a[0].strip().capitalize()
+                    apellido = a[1].strip().capitalize()
+                    dni = a[2].lower().strip()
+                    legajo = a[3].lower().strip()
                     uid = str(uuid.uuid4())
                     logging.info('importando {} {} {}'.format(nombre, apellido, dni))
                     cur.execute('select id from users where dni = %s', (dni,))
                     if cur.rowcount <= 0:
                         logging.info('agregando {}'.format(dni))
-                        cur.execute('insert into users (id,name,lastname,dni) values (%s,%s,%s,%s)', (uid, nombre, apellido, dni))
+                        cur.execute('insert into users (id,name,lastname,dni,legajo) values (%s,%s,%s,%s,%s)', (uid, nombre, apellido, dni, legajo))
 
             conn.commit()
 
