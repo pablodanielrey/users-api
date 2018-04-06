@@ -4,6 +4,7 @@ import os
 
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
+import os
 
 from sqlalchemy import or_, and_
 
@@ -17,11 +18,20 @@ class ResetClaveModel:
     INTENTOS_POR_DIA = 50
 
     DECODERS = [
+        JWTModel(os.environ[SEMILLA_PASO1]),
+        JWTModel(os.environ[SEMILLA_PASO2]),
+        JWTModel(os.environ[SEMILLA_PASO3], 60 * 5),                 # ingresar el código enviado al correo
+        JWTModel(os.environ[SEMILLA_PASO4], 60)
+    ]
+
+    """
+    DECODERS = [
         JWTModel(str(uuid.uuid4()) + str(uuid.uuid4())),
         JWTModel(str(uuid.uuid4()) + str(uuid.uuid4())),
         JWTModel(str(uuid.uuid4()) + str(uuid.uuid4()), 60 * 5),                 # ingresar el código enviado al correo
         JWTModel(str(uuid.uuid4()) + str(uuid.uuid4()), 60)
     ]
+    """
 
     @staticmethod
     def _obtener_correo_alternativo(usuario):
