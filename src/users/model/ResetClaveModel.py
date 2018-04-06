@@ -18,10 +18,10 @@ class ResetClaveModel:
     INTENTOS_POR_DIA = 50
 
     DECODERS = [
-        JWTModel(os.environ[SEMILLA_PASO1]),
-        JWTModel(os.environ[SEMILLA_PASO2]),
-        JWTModel(os.environ[SEMILLA_PASO3], 60 * 5),                 # ingresar el código enviado al correo
-        JWTModel(os.environ[SEMILLA_PASO4], 60)
+        JWTModel(os.environ['SEMILLA_PASO1']),
+        JWTModel(os.environ['SEMILLA_PASO2']),
+        JWTModel(os.environ['SEMILLA_PASO3'], 60 * 5),                 # ingresar el código enviado al correo
+        JWTModel(os.environ['SEMILLA_PASO4'], 60)
     ]
 
     """
