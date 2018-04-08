@@ -142,7 +142,7 @@ if __name__ == '__main__':
             ''' sinc usuarios '''
             cur2.execute('select max(fecha) from scripts')
             if cur2.rowcount > 0:
-                data = cur2.feetchone()
+                data = cur2.fetchone()
                 if data and len(data) > 0:
                     fecha = data[0] - datetime.timedelta(hours=3)
             if not fecha:
