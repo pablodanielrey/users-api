@@ -4,6 +4,7 @@ if __name__ == '__main__':
     import sys
     import os
     import logging
+    import datetime
     logging.getLogger().setLevel(logging.DEBUG)
     hdlr = logging.FileHandler('/tmp/importar_posgrado.log')
     formatter = logging.Formatter('%(asctime)s,%(levelname)s,%(message)s')
@@ -35,11 +36,13 @@ if __name__ == '__main__':
                     uid = str(uuid.uuid4())
                     #logging.info('importando {} {} {}'.format(nombre, apellido, dni))
                     cur.execute('select id, legajo from users where dni = %s', (dni,))
+
                     if cur.rowcount > 0:
                         u = cur.fetchone()
+                        logging.info('Legajo actual:{}'.format(u[1]))
                         if u[1] is None:
                             logging.info('{},{},{},{},legajo actualizado'.format(nombre,apellido,dni,legajo))
-                            cur.execute('update users set legajo = %s where id = %s',(legajo, u[0]))
+                            cur.execute('update users set legajo = %s, actualizado = %s where id = %s',(legajo, datetime.datetime.now(), u[0]))
                         else:
                             logging.info('{},{},{},ya existe. no se lo toca'.format(nombre,apellido,dni))
                     else:
