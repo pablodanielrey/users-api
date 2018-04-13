@@ -35,6 +35,7 @@ setup(name='users',
                             'pyjwt',
                             'Flask',
                             'flask_jsontools',
+                            'gunicorn',
                             'microservices_common'],
           entry_points={
             'console_scripts': [
