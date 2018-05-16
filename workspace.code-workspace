@@ -6,5 +6,10 @@
 		{
 			"path": "/src/github/microservices_common"
 		}
+<<<<<<< HEAD
 	]
+=======
+	],
+	"settings": {}
+>>>>>>> a2cd906ee060f2c1e08b4a8e4cf56be7c37eea26
 }

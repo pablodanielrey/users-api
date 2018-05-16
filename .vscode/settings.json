@@ -1,3 +1,8 @@
 {
+<<<<<<< HEAD
     "python.pythonPath": "/usr/bin/python"
+=======
+    "python.pythonPath": "${workspaceFolder}/env/bin/python",
+    "python.venvPath": "${workspaceFolder}/env"
+>>>>>>> a2cd906ee060f2c1e08b4a8e4cf56be7c37eea26
 }
