@@ -128,15 +128,8 @@ def auth(token=None):
     data = json.loads(request.data)
     usuario = data['usuario']
     clave = data['clave']
-    s = Session()
-    try:
+    with obtener_session() as session:
         return UsersModel.login(s, usuario, clave)
-    except Exception as e:
-        logging.exception(e)
-        raise e
-    finally:
-        s.close()
-
 
 @app.route(API_BASE + '/usuarios', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
