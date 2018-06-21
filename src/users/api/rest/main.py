@@ -129,7 +129,7 @@ def auth(token=None):
     usuario = data['usuario']
     clave = data['clave']
     with obtener_session() as session:
-        return UsersModel.login(s, usuario, clave)
+        return UsersModel.login(session, usuario, clave)
 
 @app.route(API_BASE + '/usuarios', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
