@@ -1,5 +1,7 @@
 FROM python:3.6.2-stretch
 
+RUN pip install --upgrade pip
+
 RUN apt-get update && apt-get install -y \
   postgresql-server-dev-all \
   supervisor \
