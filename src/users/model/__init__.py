@@ -4,6 +4,8 @@ import requests
 import logging
 import threading
 
+import contextlib
+
 from sqlalchemy import create_engine
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.orm import sessionmaker
@@ -13,14 +15,24 @@ from .entities import *
 
 EMAILS_API_URL = os.environ['EMAILS_API_URL']
 
-engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
-    os.environ['USERS_DB_USER'],
-    os.environ['USERS_DB_PASSWORD'],
-    os.environ['USERS_DB_HOST'],
-    os.environ['USERS_DB_NAME']
-), echo=True)
 
-Session = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+@contextlib.contextmanager
+def obtener_session():
+    engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+        os.environ['USERS_DB_USER'],
+        os.environ['USERS_DB_PASSWORD'],
+        os.environ['USERS_DB_HOST'],
+        os.environ['USERS_DB_NAME']
+    ), echo=True)
+
+    Session = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+    session = Session()
+    try:
+        yield session
+    finally:
+        session.close()
+        engine.dispose()
+
 
 def obtener_template(template, nombre, codigo):
     with open('users/model/templates/' + template,'r') as f:

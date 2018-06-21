@@ -18,7 +18,7 @@ import oidc
 from oidc.oidc import TokenIntrospection
 
 from . import reset
-from users.model import Session
+from users.model import obtener_session
 
 client_id = os.environ['OIDC_CLIENT_ID']
 client_secret = os.environ['OIDC_CLIENT_SECRET']
@@ -149,19 +149,14 @@ def usuarios(uid, token=None):
     limit = request.args.get('limit',None,int)
     mostrarClave = request.args.get('c',False,bool)
 
-    session = Session()
-    try:
+    with obtener_session() as session:
         if uid:
             us = UsersModel.usuario(session=session, uid=uid, retornarClave=mostrarClave)
             return us
-
         else:
             fecha_str = request.args.get('f', None)
             fecha = parser.parse(fecha_str) if fecha_str else None
             return UsersModel.usuarios(session=session, search=search, retornarClave=mostrarClave, offset=offset, limit=limit, fecha=fecha)
-
-    finally:
-        session.close()
 
 @app.route(API_BASE + '/usuarios', methods=['PUT'])
 @rs.require_valid_token
@@ -169,27 +164,19 @@ def usuarios(uid, token=None):
 def crear_usuario(token=None):
     usuario = request.get_json()
     logging.debug(usuario)
-    session = Session()
-    try:
+    with obtener_session() as session:
         uid = UsersModel.crear_usuario(session, usuario)
         session.commit()
         return uid
-
-    finally:
-        session.close()
 
 @app.route(API_BASE + '/usuarios/<uid>', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
 def actualizar_usuario(uid, token=None):
     datos = json.loads(request.data)
-    session = Session()
-    try:
+    with obtener_session() as session:
         UsersModel.actualizar_usuario(session, uid, datos)
         session.commit()
-
-    finally:
-        session.close()
 
 @app.route(API_BASE + '/usuarios/<uid>/claves/', methods=['PUT','POST'])
 @rs.require_valid_token
@@ -199,29 +186,20 @@ def crear_clave(uid, token=None):
     if 'clave' not in data:
         abort(400)
 
-    session = Session()
-    try:
+    with obtener_session() as session:
         r = UsersModel.cambiar_clave(session, uid, data['clave'])
         session.commit()
         return r
-    finally:
-        session.close()
 
 @app.route(API_BASE + '/generar_clave/<uid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def generar_clave(uid, token=None):
-    session = Session()
-    try:
+    with obtener_session() as session:
         logging.debug(uid)
         r = UsersModel.generar_clave(session, uid)
         session.commit()
         return {'uid':uid,'clave': r}
-    except Exception as e:
-        logging.exception(e)
-    finally:
-        session.close()
-
 
 '''
     para los chequeos de precondiciones
@@ -232,9 +210,7 @@ def generar_clave(uid, token=None):
 @jsonapi
 def precondiciones(uid, token=None):
     precondiciones = {}
-
-    session = Session()
-    try:
+    with obtener_session() as session:
         precondiciones['clave'] = {'debe_cambiarla':False}
         claves = UsersModel.claves(session, uid)
         for c in claves:
@@ -248,9 +224,6 @@ def precondiciones(uid, token=None):
             if 'econo.unlp.edu.ar' not in c.email and c.confirmado and not c.eliminado:
                 precondiciones['correos']['tiene_alternativo'] = True
                 break
-    finally:
-        session.close()
-
     return precondiciones
 
 """
@@ -286,14 +259,8 @@ def correos_de_usuario(uid, cid, token=None):
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
     h = request.args.get('h',False,bool)
-    session = Session()
-    try:
+    with obtener_session() as session:
         return UsersModel.correos(session=session, usuario=uid, historico=h, offset=offset, limit=limit)
-    except Exception as e:
-        logging.exception(e)
-        raise e
-    finally:
-        session.close()
 
 @app.route(API_BASE + '/usuarios/<uid>/correo', methods=['PUT','POST'])
 @rs.require_valid_token
@@ -302,8 +269,7 @@ def agregar_correo_institucional(uid, token=None):
     assert uid != None
     datos = json.loads(request.data)
     assert datos['correo'] != None
-    session = Session()
-    try:
+    with obtener_session() as session:
         if not UsersModel.existe(session=session, usuario=uid):
             raise Exception('Usuario no existente')
 
@@ -316,14 +282,6 @@ def agregar_correo_institucional(uid, token=None):
             session.commit()
         return mail.id
 
-    except Exception as e:
-        session.rollback()
-        logging.exception(e)
-        raise e
-
-    finally:
-        session.close()
-
 @app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['PUT','POST'])
 @rs.require_valid_token
 @jsonapi
@@ -331,18 +289,11 @@ def agregar_correo(uid, token=None):
     assert uid != None
     datos = json.loads(request.data)
     print(datos)
-    session = Session()
-    try:
+    with obtener_session() as session:
         cid = UsersModel.agregar_correo(session=session, uid=uid, datos=datos)
         session.commit()
         UsersModel.enviar_confirmar_correo(session, cid)
         session.commit()
-
-    except Exception as e:
-        logging.exception(e)
-        raise e
-    finally:
-        session.close()
 
 @app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['DELETE'])
 @app.route(API_BASE + '/correos/<cid>', methods=['DELETE'])
@@ -351,26 +302,19 @@ def agregar_correo(uid, token=None):
 def eliminar_correo(uid=None, cid=None, token=None):
     assert uid != None
     assert cid != None
-    session = Session()
-    try:
+    with obtener_session() as session:
         UsersModel.eliminar_correo(session, cid)
         session.commit()
         return {'id':cid}
-
-    finally:
-        session.close()
 
 
 @app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def enviar_confirmar_correo(uid, cid, token=None):
-    session = Session()
-    try:
+    with obtener_session() as session:
         UsersModel.enviar_confirmar_correo(session, cid)
         session.commit()
-    finally:
-        session.close()
 
 @app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/confirmar', methods=['PUT','POST'])
 @rs.require_valid_token
@@ -378,13 +322,9 @@ def enviar_confirmar_correo(uid, cid, token=None):
 def confirmar_correo(uid, cid, token=None):
     assert cid is not None
     code = json.loads(request.data)['codigo']
-
-    session = Session()
-    try:
+    with obtener_session() as session:
         UsersModel.confirmar_correo(session=session, cid=cid, code=code)
         session.commit()
-    finally:
-        session.close()
 
 @app.route(API_BASE + '/correos/', methods=['GET'], defaults={'cid':None})
 @app.route(API_BASE + '/correos/<cid>', methods=['GET'])
@@ -394,27 +334,19 @@ def correos(cid, token=None):
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
     h = request.args.get('h',False,bool)
-    session = Session()
-    try:
+    with obtener_session() as session:
         return UsersModel.correos(session=session, historico=h, offset=offset, limit=limit)
-    finally:
-        session.close()
 
 @app.route(API_BASE + '/correo/<cuenta>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def obtenerCorreo(cuenta, token=None):
-    session = Session()
-    try:
+    with obtener_session() as session:
         correo = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=cuenta)
         if correo:
             return {'existe':True, 'correo': correo}
         else:
             return {'existe':False, 'correo':None}
-    finally:
-        session.close()
-
-
 
 @app.after_request
 def add_header(r):

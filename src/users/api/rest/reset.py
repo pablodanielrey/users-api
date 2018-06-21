@@ -6,7 +6,7 @@ from users.model import ResetClaveModel
 from users.model.exceptions import *
 from flask_jsontools import jsonapi
 
-from users.model import Session
+from users.model import obtener_session
 
 def _obtener_token_de_authorization():
     token = None
@@ -87,17 +87,13 @@ def registrarApiReseteoClave(app):
         token = _obtener_token_de_authorization()
         if not token:
             abort(403)
-        session = Session()
-        try:
-            return ResetClaveModel.obtener_usuario(session, token, dni)
-            session.commit()
-
-        except ResetClaveError as e:
-            session.commit()
-            raise e
-
-        finally:
-            session.close()
+        with obtener_session() as session:
+            try:
+                return ResetClaveModel.obtener_usuario(session, token, dni)
+                session.commit()
+            except ResetClaveError as e:
+                session.commit()
+                raise e
 
     @app.route('/users/api/v1.0/reset/enviar_codigo', methods=['POST'])
     @jsonapi
@@ -129,10 +125,7 @@ def registrarApiReseteoClave(app):
         if not 'clave' in datos:
             abort(400)
 
-        session = Session()
-        try:
+        with obtener_session() as session:
             r = ResetClaveModel.cambiar_clave(session, token, datos['clave'])
             session.commit()
             return r
-        finally:
-            session.close()
