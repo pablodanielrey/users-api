@@ -8,7 +8,7 @@ import logging
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import joinedload, contains_eager
 
-from . import Session, obtener_template, enviar_correo
+from . import obtener_template, enviar_correo
 from .exceptions import *
 from .entities import *
 

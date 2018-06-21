@@ -8,7 +8,7 @@ import os
 
 from sqlalchemy import or_, and_
 
-from . import Session, UsersModel, obtener_template, enviar_correo
+from . import UsersModel, obtener_template, enviar_correo
 from .exceptions import *
 from .JWTModel import JWTModel
 from .entities import *
@@ -53,18 +53,13 @@ class ResetClaveModel:
         return cls.DECODERS[encoder].decode_auth_token(token)
 
     @classmethod
-    def verificaciones(cls, solo_pendientes=True, limit=None, offset=None):
-        session = Session()
-        try:
-            q = session.query(ResetClaveCodigo)
-            q = q.filter(ResetClaveCodigo.verificado == None, ResetClaveCodigo.expira >= datetime.datetime.now()) if solo_pendientes else q
-            q = q.limit(limit) if limit else q
-            q = q.offset(offset) if offset else q
-            q = q.order_by(ResetClaveCodigo.creado.desc(), ResetClaveCodigo.actualizado.desc())
-            return q.all()
-
-        finally:
-            session.close()
+    def verificaciones(cls, session, solo_pendientes=True, limit=None, offset=None):
+        q = session.query(ResetClaveCodigo)
+        q = q.filter(ResetClaveCodigo.verificado == None, ResetClaveCodigo.expira >= datetime.datetime.now()) if solo_pendientes else q
+        q = q.limit(limit) if limit else q
+        q = q.offset(offset) if offset else q
+        q = q.order_by(ResetClaveCodigo.creado.desc(), ResetClaveCodigo.actualizado.desc())
+        return q.all()
 
     @classmethod
     def obtener_token(cls):
@@ -116,7 +111,7 @@ class ResetClaveModel:
         return r
 
     @classmethod
-    def enviar_codigo(cls, token):
+    def enviar_codigo(cls, session, token):
         assert token is not None
         datos = None
         try:
@@ -124,7 +119,6 @@ class ResetClaveModel:
         except Exception as e:
             raise TokenExpiradoError()
 
-        session = Session()
         try:
             dni = datos['dni']
             correo = datos['correo']['email']
@@ -148,10 +142,10 @@ class ResetClaveModel:
                 break
             else:
                 rc = ResetClaveCodigo(nombre = datos['nombre'] + ' ' + datos['apellido'],
-                                      dni = datos['dni'],
-                                      codigo = str(uuid.uuid4())[:5],
-                                      correo = datos['correo']['email'],
-                                      expira = ahora + datetime.timedelta(days=1))
+                                        dni = datos['dni'],
+                                        codigo = str(uuid.uuid4())[:5],
+                                        correo = datos['correo']['email'],
+                                        expira = ahora + datetime.timedelta(days=1))
                 session.add(rc)
             session.commit()
 
@@ -169,11 +163,8 @@ class ResetClaveModel:
         except Exception as e:
             raise EnvioCodigoError()
 
-        finally:
-            session.close()
-
     @classmethod
-    def verificar_codigo(cls, token, codigo):
+    def verificar_codigo(cls, session, token, codigo):
         assert token is not None
         rcid = None
         try:
@@ -181,36 +172,30 @@ class ResetClaveModel:
         except Exception as e:
             raise TokenExpiradoError()
 
-        session = Session()
-        try:
-            ahora = datetime.datetime.now()
-            rc = session.query(ResetClaveCodigo).filter(ResetClaveCodigo.id == rcid, ResetClaveCodigo.expira >= ahora).one_or_none()
-            if not rc:
-                raise TokenExpiradoError()
+        ahora = datetime.datetime.now()
+        rc = session.query(ResetClaveCodigo).filter(ResetClaveCodigo.id == rcid, ResetClaveCodigo.expira >= ahora).one_or_none()
+        if not rc:
+            raise TokenExpiradoError()
 
-            if rc.verificado:
-                raise TokenExpiradoError()
+        if rc.verificado:
+            raise TokenExpiradoError()
 
-            if rc.intentos > 10:
-                rc.expira = ahora
-                session.commit()
-                raise LimiteDeVerificacionError()
-
-            if rc.codigo != codigo:
-                rc.intentos = rc.intentos + 1
-                session.commit()
-                raise CodigoIncorrectoError()
-
-            rc.verificado = ahora
+        if rc.intentos > 10:
             rc.expira = ahora
             session.commit()
+            raise LimiteDeVerificacionError()
 
-            nuevo_token = cls.DECODERS[3].encode_auth_token(datos=rc.dni)
-            return { 'estado':'ok', 'token': nuevo_token }
+        if rc.codigo != codigo:
+            rc.intentos = rc.intentos + 1
+            session.commit()
+            raise CodigoIncorrectoError()
 
-        finally:
-            session.close()
+        rc.verificado = ahora
+        rc.expira = ahora
+        session.commit()
 
+        nuevo_token = cls.DECODERS[3].encode_auth_token(datos=rc.dni)
+        return { 'estado':'ok', 'token': nuevo_token }
 
     @classmethod
     def cambiar_clave(cls, session, token, clave):

@@ -66,7 +66,8 @@ def registrarApiReseteoClave(app):
         solo_pendientes = request.args.get('p', False, bool)
         limit = request.args.get('limit', None, int)
         offset = request.args.get('offset', None, int)
-        return ResetClaveModel.verificaciones(solo_pendientes=solo_pendientes, limit=limit, offset=offset)
+        with obtener_session() as session:
+            return ResetClaveModel.verificaciones(solo_pendientes=solo_pendientes, limit=limit, offset=offset)
 
     @app.errorhandler(UsersError)
     def reset_retorar_error(error):
@@ -101,7 +102,8 @@ def registrarApiReseteoClave(app):
         token = _obtener_token_de_authorization()
         if not token:
             abort(403)
-        return ResetClaveModel.enviar_codigo(token)
+        with obtener_session() as session:
+            return ResetClaveModel.enviar_codigo(session, token)
 
     @app.route('/users/api/v1.0/reset/verificar_codigo', methods=['POST'])
     @jsonapi
@@ -112,7 +114,8 @@ def registrarApiReseteoClave(app):
         datos = json.loads(request.data)
         if not 'codigo' in datos:
             abort(400)
-        return ResetClaveModel.verificar_codigo(token, datos['codigo'])
+        with obtener_session() as session:
+            return ResetClaveModel.verificar_codigo(session, token, datos['codigo'])
 
 
     @app.route('/users/api/v1.0/reset/cambiar_clave', methods=['POST'])
