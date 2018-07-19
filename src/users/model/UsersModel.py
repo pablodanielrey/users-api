@@ -15,6 +15,7 @@ from .entities import *
 
 class UsersModel:
 
+    VERIFY_SSL = bool(os.environ.get('VERIFY_SSL', False))
     FILES_API_URL = os.environ['FILES_API_URL']
 
     @staticmethod
@@ -28,7 +29,7 @@ class UsersModel:
     def obtener_avatar(cls, hash):
         avatar = None
         url = cls.FILES_API_URL + '/archivo/' + hash + '/contenido'
-        resp = requests.get(url)
+        resp = requests.get(url, verify=cls.VERIFY_SSL)
         if resp.status_code != 200:
             ''' pruebo obtener una imagen por defecto '''
             with open('users/model/templates/avatar.png', 'rb') as f:
@@ -48,7 +49,7 @@ class UsersModel:
     @classmethod
     def actualizar_avatar(cls, hash, contenido):
         url = cls.FILES_API_URL + '/archivo/' + hash + '.json'
-        resp = requests.post(url=url, json={'id':hash, 'data':contenido})
+        resp = requests.post(url=url, json={'id':hash, 'data':contenido}, verify=cls.VERIFY_SSL)
         if resp.status_code != 200:
             raise UsersError()
 
