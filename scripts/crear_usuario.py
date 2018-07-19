@@ -9,7 +9,7 @@ if __name__ == '__main__':
     }
     print('Creando usuario {}'.format(u))
 
-    from users.model import obtener_sesion, UsersModel
+    from users.model import obtener_session, UsersModel
     with obtener_session() as s:
         uid = UsersModel.crear_usuario(s, u)
         UsersModel.cambiar_clave(s, uid, sys.argv[4])
