@@ -12,5 +12,6 @@ if __name__ == '__main__':
     from users.model import obtener_session, UsersModel
     with obtener_session() as s:
         uid = UsersModel.crear_usuario(s, u)
+        s.commit()
         UsersModel.cambiar_clave(s, uid, sys.argv[4])
         s.commit()
