@@ -50,6 +50,13 @@ def enviar_correo(de, para, asunto, cuerpo):
 
 def crear_tablas():
     #engine.execute(CreateSchema('users'))
+    engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+        os.environ['USERS_DB_USER'],
+        os.environ['USERS_DB_PASSWORD'],
+        os.environ['USERS_DB_HOST'],
+        os.environ['USERS_DB_NAME']
+    ), echo=True)
+
     Base.metadata.create_all(engine)
 
 from .UsersModel import UsersModel
