@@ -85,7 +85,6 @@ class UsersModel:
             raise FormatoDeClaveIncorrectoError()
 
         """
-        dni = session.query(Usuario.dni).filter(Usuario.id == uid).one()
         uclave = session.query(UsuarioClave).filter(UsuarioClave.usuario_id == uid, UsuarioClave.eliminada == None).one_or_none()
         if uclave:
             uclave.eliminada = datetime.datetime.now()
@@ -99,6 +98,7 @@ class UsersModel:
             uclave.actualizado = datetime.datetime.now()
             uclave.debe_cambiarla = False
         else:
+            dni = session.query(Usuario.dni).filter(Usuario.id == uid).one()
             uuclave = UsuarioClave(usuario_id=uid, nombre_de_usuario=dni, clave=clave)
             uuclave.debe_cambiarla = False
             session.add(uuclave)
