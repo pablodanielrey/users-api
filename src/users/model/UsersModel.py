@@ -145,6 +145,12 @@ class UsersModel:
         if session.query(Usuario).filter(Usuario.dni == dni).count() > 0:
             raise Exception('Usuario existente')
 
+        u = Usuario()
+        u.id = str(uuid.uuid4())
+        u.nombre = usuario['nombre']
+        u.apellido = usuario['apellido']
+        u.dni = dni
+
         if 'legajo' in usuario:
             legajo = usuario['legajo']
             if legajo:
@@ -154,13 +160,9 @@ class UsersModel:
 
                 if session.query(Usuario).filter(Usuario.legajo == legajo).count() > 0:
                     raise Exception('Legajo existente')
+                
+                u.legajo = legajo
 
-        u = Usuario()
-        u.nombre = usuario['nombre']
-        u.apellido = usuario['apellido']
-        u.dni = dni
-        u.legajo = legajo
-        u.id = str(uuid.uuid4())
         session.add(u)
         return u.id
 
