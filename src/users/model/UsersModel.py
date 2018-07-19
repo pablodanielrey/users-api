@@ -15,7 +15,7 @@ from .entities import *
 
 class UsersModel:
 
-    VERIFY_SSL = bool(os.environ.get('VERIFY_SSL', False))
+    VERIFY_SSL = bool(int(os.environ.get('VERIFY_SSL', 1)))
     FILES_API_URL = os.environ['FILES_API_URL']
 
     @staticmethod
