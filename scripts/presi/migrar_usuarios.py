@@ -40,9 +40,10 @@ if __name__ == '__main__':
                         try:
                             cur.execute("insert into users (id, dni, name, lastname, gender, country, city, address) values (%s,%s,%s,%s,%s,%s,%s,%s)", (uid, dni, nombre, apellido, genero, pais, ciudad, direccion))
                             cur.execute("insert into telephones (id,number,user_id) values (%s,%s,%s)", (str(uuid.uuid4()), telefono, uid))
+                            conn.commit()
                         except Exception as e:
                             dni = '{}_{}'.format(dni,i)
-            conn.commit()
+            
 
         finally:
             conn2.close()
