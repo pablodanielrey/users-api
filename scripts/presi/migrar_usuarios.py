@@ -23,7 +23,7 @@ if __name__ == '__main__':
         try:
             cur2.execute('select id, dni, name, lastname, telephone, gender, country, city, notes, email, upassword, direccion from users_migracion')
             for m in cur2:
-                cur.execute('select 1 from usuario where id = %s', (m[0],))
+                cur.execute('select 1 from users where id = %s', (m[0],))
                 if cur.rowcount <= 0:
                     uid = m[0]
                     dni = m[1]
@@ -36,8 +36,12 @@ if __name__ == '__main__':
                     correo = m[9]
                     c = m[10]
                     direccion = m[11]
-                    cur.execute("insert into usuario (id, dni, name, lastname, gender, country, city, address) values (%s,%s,%s,%s,%s,%s,%s,%s)", (uid, dni, nombre, apellido, genero, pais, ciudad, direccion))
-                    cur.execute("insert into telephones (id,number,user_id) values (%s,%s,%s)", (str(uuid.uuid4()), telefono, uid))
+                    for i in range(1,10):
+                        try:
+                            cur.execute("insert into users (id, dni, name, lastname, gender, country, city, address) values (%s,%s,%s,%s,%s,%s,%s,%s)", (uid, dni, nombre, apellido, genero, pais, ciudad, direccion))
+                            cur.execute("insert into telephones (id,number,user_id) values (%s,%s,%s)", (str(uuid.uuid4()), telefono, uid))
+                        except Exception as e:
+                            dni = '{}_{}'.format(dni,i)
             conn.commit()
 
         finally:
