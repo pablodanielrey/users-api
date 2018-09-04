@@ -13,10 +13,10 @@ if __name__ == '__main__':
     ))
     cur = conn.cursor()
     try:
-        host = sys.argv[0]
-        db = sys.argv[1]
-        user = sys.argv[2]
-        passw = sys.argv[3]
+        host = sys.argv[1]
+        db = sys.argv[2]
+        user = sys.argv[3]
+        passw = sys.argv[4]
 
         conn2 = psycopg2.connect("host='{}' user='{}' password='{}' dbname={}".format(host, user, passw, db))
         cur2 = conn2.cursor(cursor_factory=DictCursor)
