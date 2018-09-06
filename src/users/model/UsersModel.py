@@ -182,19 +182,11 @@ class UsersModel:
         apellido = g2.group()
 
         legajo = datos['legajo']
-        genero = datos['genero']
-        pais = datos['pais']
-        ciudad = datos['ciudad']
-        direccion = datos['direccion']
 
         usuario = session.query(Usuario).filter(Usuario.id == uid).one()
         usuario.nombre = nombre
         usuario.apellido = apellido
         usuario.legajo = legajo
-        usuario.genero = genero
-        usuario.pais = pais
-        usuario.ciudad = ciudad
-        usuario.direccion = direccion
 
     @classmethod
     def usuario(cls, session, uid=None, dni=None, retornarClave=False):
