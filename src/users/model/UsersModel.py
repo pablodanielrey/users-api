@@ -160,7 +160,7 @@ class UsersModel:
 
                 if session.query(Usuario).filter(Usuario.legajo == legajo).count() > 0:
                     raise Exception('Legajo existente')
-                
+
                 u.legajo = legajo
 
         session.add(u)
@@ -182,11 +182,19 @@ class UsersModel:
         apellido = g2.group()
 
         legajo = datos['legajo']
+        genero = datos['genero']
+        direccion = datos['direccion']
+        ciudad= datos['ciudad']
+        pais= datos['pais']
 
         usuario = session.query(Usuario).filter(Usuario.id == uid).one()
         usuario.nombre = nombre
         usuario.apellido = apellido
         usuario.legajo = legajo
+        usuario.genero = genero
+        usuario.direccion = direccion
+        usuario.ciudad = ciudad
+        usuario.pais= pais
 
     @classmethod
     def usuario(cls, session, uid=None, dni=None, retornarClave=False):
