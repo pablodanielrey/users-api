@@ -322,8 +322,9 @@ class UsersModel:
 
     @classmethod
     def eliminar_telefono(cls, session, tid):
-        telefono = session.query(Telephone).filter(Telephone.id == tid).one()
-        telefono.eliminado = datetime.datetime.now()
+        telefono = session.query(Telefono).filter(Telefono.id == tid).one()
+        telefono.actualizado = datetime.datetime.now()
+        telefono.tipo = "eliminado"
 
     @classmethod
     def confirmar_correo(cls, session, cid, code):

@@ -9,6 +9,7 @@ class Telefono(Base):
 
     numero = Column('number', String)
     tipo = Column('type', String)
+    actualizado = Column('actualizado', DateTime)
 
     usuario_id = Column('user_id', String, ForeignKey('users.id'))
     usuario = relationship('Usuario', back_populates='telefonos')
