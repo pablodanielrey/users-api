@@ -181,20 +181,19 @@ class UsersModel:
             raise FormatoIncorrecto()
         apellido = g2.group()
 
-        legajo = datos['legajo']
-        genero = datos['genero']
-        direccion = datos['direccion']
-        ciudad= datos['ciudad']
-        pais= datos['pais']
-
         usuario = session.query(Usuario).filter(Usuario.id == uid).one()
         usuario.nombre = nombre
         usuario.apellido = apellido
-        usuario.legajo = legajo
-        usuario.genero = genero
-        usuario.direccion = direccion
-        usuario.ciudad = ciudad
-        usuario.pais= pais
+        if 'legajo' in datos:
+            usuario.legajo = datos['legajo']
+        if 'genero' in datos:
+            usuario.genero = datos['genero']
+        if 'direccion' in datos:
+            usuario.direccion = datos['direccion']
+        if 'ciudad' in datos:
+            usuario.ciudad = datos['ciudad']
+        if 'pais' in datos:
+            usuario.pais = datos['pais']
 
     @classmethod
     def usuario(cls, session, uid=None, dni=None, retornarClave=False):
@@ -320,6 +319,12 @@ class UsersModel:
     def eliminar_correo(cls, session, cid):
         correo = session.query(Mail).filter(Mail.id == cid).one()
         correo.eliminado = datetime.datetime.now()
+
+    @classmethod
+    def eliminar_telefono(cls, session, tid):
+        telefono = session.query(Telefono).filter(Telefono.id == tid).one()
+        telefono.actualizado = datetime.datetime.now()
+        telefono.tipo = "eliminado"
 
     @classmethod
     def confirmar_correo(cls, session, cid, code):

@@ -300,6 +300,18 @@ def eliminar_correo(uid=None, cid=None, token=None):
         session.commit()
         return {'id':cid}
 
+@app.route(API_BASE + '/usuarios/<uid>/telefonos/<tid>', methods=['DELETE'])
+@app.route(API_BASE + '/telefonos/<tid>', methods=['DELETE'])
+@rs.require_valid_token
+@jsonapi
+def eliminar_telefono(uid=None, tid=None, token=None):
+    assert uid != None
+    assert tid != None
+    with obtener_session() as session:
+        UsersModel.eliminar_telefono(session, tid)
+        session.commit()
+        return {'id':tid}
+
 
 @app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'])
 @rs.require_valid_token
