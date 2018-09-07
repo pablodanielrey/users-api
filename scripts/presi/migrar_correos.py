@@ -30,12 +30,9 @@ if __name__ == '__main__':
                 correo = m[1]
                 print('Correo: ',correo)
                 try:
-                    t="cur.execute('insert into mails (id, email, user_id) values (%s,%s,%s)', (str(uuid.uuid4()), correo, uid))"
-                    print(t)
-                    #cur.execute("insert into mails (id, email, user_id) values (%s,%s,%s)", (str(uuid.uuid4()), correo, uid))
-                    #conn.commit()
-                    print('Agregado')
-                    break
+                    cur.execute("insert into mails (id, email, user_id) values (%s,%s,%s)", (str(uuid.uuid4()), correo, uid))
+                    conn.commit()
+                    print('--Agregado--')
                 except Exception as e:
                     print(e)
                     conn.rollback()
