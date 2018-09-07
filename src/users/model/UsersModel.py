@@ -321,6 +321,11 @@ class UsersModel:
         correo.eliminado = datetime.datetime.now()
 
     @classmethod
+    def eliminar_telefono(cls, session, tid):
+        telefono = session.query(Telephone).filter(Telephone.id == tid).one()
+        telefono.eliminado = datetime.datetime.now()
+
+    @classmethod
     def confirmar_correo(cls, session, cid, code):
         correo = session.query(Mail).filter(Mail.id == cid, Mail.hash == code, Mail.eliminado == None).order_by(Mail.creado.desc()).first()
         if not correo:

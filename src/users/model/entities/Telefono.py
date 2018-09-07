@@ -7,8 +7,8 @@ class Telefono(Base):
 
     __tablename__ = 'telephones'
 
-    numero = Column('type', String)
-    tipo = Column('number', String)
+    numero = Column('number', String)
+    tipo = Column('type', String)
 
     usuario_id = Column('user_id', String, ForeignKey('users.id'))
     usuario = relationship('Usuario', back_populates='telefonos')
