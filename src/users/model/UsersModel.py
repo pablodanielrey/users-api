@@ -207,6 +207,7 @@ class UsersModel:
         if retornarClave:
             q = q.join(UsuarioClave).filter(UsuarioClave.eliminada == None).options(contains_eager(Usuario.claves))
         q = q.options(joinedload('mails'), joinedload('telefonos'))
+        q = q.filter(Telefono.eliminado == None)
         return q.one()
 
 
@@ -323,8 +324,7 @@ class UsersModel:
     @classmethod
     def eliminar_telefono(cls, session, tid):
         telefono = session.query(Telefono).filter(Telefono.id == tid).one()
-        telefono.actualizado = datetime.datetime.now()
-        telefono.tipo = "eliminado"
+        telefono.eliminado = datetime.datetime.now()
 
     @classmethod
     def confirmar_correo(cls, session, cid, code):
