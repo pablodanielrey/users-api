@@ -207,6 +207,7 @@ class UsersModel:
         if retornarClave:
             q = q.join(UsuarioClave).filter(UsuarioClave.eliminada == None).options(contains_eager(Usuario.claves))
         q = q.options(joinedload('mails'), joinedload('telefonos'))
+        q = q.filter(Telefono.eliminado == None)
         return q.one()
 
 
