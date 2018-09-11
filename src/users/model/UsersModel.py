@@ -326,6 +326,22 @@ class UsersModel:
         telefono = session.query(Telefono).filter(Telefono.id == tid).one()
         telefono.eliminado = datetime.datetime.now()
 
+    '''
+    @classmethod
+    def actualizar_telefono(cls, session, telefono):
+        t = session.query(Telefono).filter(Telefono.id == telefono.id).one():
+        if t:
+            t.tipo = telefono.tipo
+            t.numero = telefono.numero
+            t.actualizado = datetime.datetime.now()
+        else:
+            tel = Telefono(numero=telefono.numero)
+            tel.tipo = telefono.tipo
+            tel.id = str(uuid.uuid4())
+            tel.usuario_id = telefono.usuario_id
+    '''
+
+
     @classmethod
     def confirmar_correo(cls, session, cid, code):
         correo = session.query(Mail).filter(Mail.id == cid, Mail.hash == code, Mail.eliminado == None).order_by(Mail.creado.desc()).first()
