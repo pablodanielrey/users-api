@@ -196,6 +196,17 @@ class UsersModel:
             usuario.pais = datos['pais']
         if 'nacimiento' in datos:
             usuario.nacimiento = datos['nacimiento']
+        '''
+        if 'telefonos' in datos:
+            telefonos = datos['telefonos']
+            for tel in telefonos:
+                if not (session.query(Telefono).filter(Telefono.id == tel.id).one()):
+                    telNuevo = Telefono(numero=tel.numero)
+                    telNuevo.id = str(uuid.uuid4())
+                    telNuevo.tipo = tel.tipo
+                    telNuevo.usuario_id = uid
+                    session.add(telNuevo)
+        '''
 
     @classmethod
     def usuario(cls, session, uid=None, dni=None, retornarClave=False):
