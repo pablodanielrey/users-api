@@ -169,13 +169,18 @@ def actualizar_usuario(uid, token=None):
     datos = json.loads(request.data)
     with obtener_session() as session:
         UsersModel.actualizar_usuario(session, uid, datos)
-        '''
-        if 'telefonos' in datos:
-            telefonos = datos.telefonos
-            for t in telefonos:
-                UsersModel.actualizar_telefono(session, t)
-        '''
         session.commit()
+
+'''
+@app.route(API_BASE + '/usuarios/<uid>/telefono', methods=['PUT','POST'])
+@rs.require_valid_token
+@jsonapi
+def crear_telefono(uid, token=None):
+    telefono = json.loads(request.data)
+    with obtener_session() as session:
+        UsersModel.agregar_telefono(session, uid, telefono)
+        session.commit()
+'''
 
 @app.route(API_BASE + '/usuarios/<uid>/claves/', methods=['PUT','POST'])
 @rs.require_valid_token

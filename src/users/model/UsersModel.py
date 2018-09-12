@@ -330,17 +330,14 @@ class UsersModel:
 
     '''
     @classmethod
-    def actualizar_telefono(cls, session, telefono):
-        t = session.query(Telefono).filter(Telefono.id == telefono.id).one():
-        if t:
-            t.tipo = telefono.tipo
-            t.numero = telefono.numero
-            t.actualizado = datetime.datetime.now()
-        else:
-            tel = Telefono(numero=telefono.numero)
-            tel.tipo = telefono.tipo
-            tel.id = str(uuid.uuid4())
-            tel.usuario_id = telefono.usuario_id
+    def agregar_telefono(cls, session, uid, telefono):
+        assert 'numero' in telefono
+        assert 'tipo' in telefono
+
+        tel = Telefono(numero=telefono.numero)
+        tel.tipo = telefono.tipo
+        tel.id = str(uuid.uuid4())
+        tel.usuario_id = uid
     '''
 
 
