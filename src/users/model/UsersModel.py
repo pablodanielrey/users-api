@@ -194,6 +194,8 @@ class UsersModel:
             usuario.ciudad = datos['ciudad']
         if 'pais' in datos:
             usuario.pais = datos['pais']
+        if 'nacimiento' in datos:
+            usuario.nacimiento = datos['nacimiento']
 
     @classmethod
     def usuario(cls, session, uid=None, dni=None, retornarClave=False):
