@@ -172,40 +172,6 @@ def actualizar_usuario(uid, token=None):
         session.commit()
 
 '''
-@app.route(API_BASE + '/usuarios/<uid>/telefono', methods=['PUT','POST'])
-@rs.require_valid_token
-@jsonapi
-def crear_telefono(uid, token=None):
-    telefono = json.loads(request.data)
-    with obtener_session() as session:
-        UsersModel.agregar_telefono(session, uid, telefono)
-        session.commit()
-'''
-
-@app.route(API_BASE + '/usuarios/<uid>/claves/', methods=['PUT','POST'])
-@rs.require_valid_token
-@jsonapi
-def crear_clave(uid, token=None):
-    data = json.loads(request.data)
-    if 'clave' not in data:
-        abort(400)
-
-    with obtener_session() as session:
-        r = UsersModel.cambiar_clave(session, uid, data['clave'])
-        session.commit()
-        return r
-
-@app.route(API_BASE + '/generar_clave/<uid>', methods=['GET'])
-@rs.require_valid_token
-@jsonapi
-def generar_clave(uid, token=None):
-    with obtener_session() as session:
-        logging.debug(uid)
-        r = UsersModel.generar_clave(session, uid)
-        session.commit()
-        return {'uid':uid,'clave': r}
-
-'''
     para los chequeos de precondiciones
 '''
 
@@ -230,29 +196,6 @@ def precondiciones(uid, token=None):
                 break
     return precondiciones
 
-"""
-@app.route(API_BASE + '/usuarios/<uid>/claves', methods=['GET'])
-@app.route(API_BASE + '/usuarios/<uid>/claves/', methods=['GET'])
-@jsonapi
-def obtener_claves(uid):
-    session = Session()
-    try:
-        return UsersModel.claves(session, uid)
-    finally:
-        session.close()
-"""
-
-"""
-@app.route(API_BASE + '/claves/', methods=['GET'], defaults={'cid':None})
-@app.route(API_BASE + '/claves/<cid>', methods=['GET'])
-@jsonapi
-def claves(cid):
-    session = Session()
-    try:
-        return UsersModel.claves(session=session, cid=cid)
-    finally:
-        session.close()
-"""
 
 @app.route(API_BASE + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
 @app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
@@ -342,27 +285,17 @@ def confirmar_correo(uid, cid, token=None):
         UsersModel.confirmar_correo(session=session, cid=cid, code=code)
         session.commit()
 
-@app.route(API_BASE + '/correos/', methods=['GET'], defaults={'cid':None})
-@app.route(API_BASE + '/correos/<cid>', methods=['GET'])
+@app.route(API_BASE + '/correos/<cuenta>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
-def correos(cid, token=None):
-    offset = request.args.get('offset',None,int)
-    limit = request.args.get('limit',None,int)
-    h = request.args.get('h',False,bool)
-    with obtener_session() as session:
-        return UsersModel.correos(session=session, historico=h, offset=offset, limit=limit)
-
-@app.route(API_BASE + '/correo/<cuenta>', methods=['GET'])
-@rs.require_valid_token
-@jsonapi
-def obtenerCorreo(cuenta, token=None):
+def chequear_disponibilidad_cuenta(cuenta, token=None):
     with obtener_session() as session:
         correo = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=cuenta)
         if correo:
             return {'existe':True, 'correo': correo}
         else:
             return {'existe':False, 'correo':None}
+
 
 @app.after_request
 def add_header(r):
