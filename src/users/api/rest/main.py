@@ -24,6 +24,8 @@ client_id = os.environ['OIDC_CLIENT_ID']
 client_secret = os.environ['OIDC_CLIENT_SECRET']
 rs = TokenIntrospection(client_id, client_secret)
 
+
+
 API_BASE=os.environ['API_BASE']
 
 app = Flask(__name__)
@@ -140,7 +142,20 @@ def usuarios(uid, token=None):
     search = request.args.get('q', None)
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
-    mostrarClave = request.args.get('c',False,bool)
+
+    admin = False
+    prof = warden.has_all_profiles(token, ['users-super-admin'])
+    if prof['profile']:
+        mostrarClave = request.args.get('c',False,bool)
+        admin = True
+    else:
+        prof = warden.has_all_profiles(token, ['users-admin'])
+        admin = prof['profile']
+
+    if not admin:
+        auid = token['sub']
+        if auid != uid:
+            return ('no tiene los permisos suficientes', 403)
 
     with obtener_session() as session:
         if uid:
@@ -155,6 +170,11 @@ def usuarios(uid, token=None):
 @rs.require_valid_token
 @jsonapi
 def crear_usuario(token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
     usuario = request.get_json()
     logging.debug(usuario)
     with obtener_session() as session:
@@ -166,6 +186,11 @@ def crear_usuario(token=None):
 @rs.require_valid_token
 @jsonapi
 def actualizar_usuario(uid, token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
     datos = json.loads(request.data)
     with obtener_session() as session:
         UsersModel.actualizar_usuario(session, uid, datos)
@@ -196,13 +221,17 @@ def precondiciones(uid, token=None):
                 break
     return precondiciones
 
-
 @app.route(API_BASE + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
 @app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
 @app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['GET'])
 @rs.require_valid_token
 @jsonapi
 def correos_de_usuario(uid, cid, token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
     h = request.args.get('h',False,bool)
@@ -213,6 +242,11 @@ def correos_de_usuario(uid, cid, token=None):
 @rs.require_valid_token
 @jsonapi
 def agregar_correo_institucional(uid, token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
     assert uid != None
     datos = json.loads(request.data)
     assert datos['correo'] != None
@@ -233,6 +267,11 @@ def agregar_correo_institucional(uid, token=None):
 @rs.require_valid_token
 @jsonapi
 def agregar_correo(uid, token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
     assert uid != None
     datos = json.loads(request.data)
     print(datos)
@@ -247,6 +286,11 @@ def agregar_correo(uid, token=None):
 @rs.require_valid_token
 @jsonapi
 def eliminar_correo(uid=None, cid=None, token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
     assert uid != None
     assert cid != None
     with obtener_session() as session:
@@ -259,6 +303,11 @@ def eliminar_correo(uid=None, cid=None, token=None):
 @rs.require_valid_token
 @jsonapi
 def eliminar_telefono(uid=None, tid=None, token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']: 
+        return ('no tiene los permisos suficientes', 403)
+
     assert uid != None
     assert tid != None
     with obtener_session() as session:
@@ -271,6 +320,11 @@ def eliminar_telefono(uid=None, tid=None, token=None):
 @rs.require_valid_token
 @jsonapi
 def enviar_confirmar_correo(uid, cid, token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
     with obtener_session() as session:
         UsersModel.enviar_confirmar_correo(session, cid)
         session.commit()
@@ -279,6 +333,11 @@ def enviar_confirmar_correo(uid, cid, token=None):
 @rs.require_valid_token
 @jsonapi
 def confirmar_correo(uid, cid, token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
     assert cid is not None
     code = json.loads(request.data)['codigo']
     with obtener_session() as session:
@@ -289,6 +348,11 @@ def confirmar_correo(uid, cid, token=None):
 @rs.require_valid_token
 @jsonapi
 def chequear_disponibilidad_cuenta(cuenta, token=None):
+
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
     with obtener_session() as session:
         correo = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=cuenta)
         if correo:
