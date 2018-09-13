@@ -105,6 +105,8 @@ class UsersModel:
 
         session.commit()
 
+        
+
         '''
             lo siguiente debo hacerlo con eventos para desacoplar sistemas y microservicios
         try:

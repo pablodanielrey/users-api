@@ -13,5 +13,4 @@ class UsuarioClave(Base):
     eliminada = Column(DateTime)
     debe_cambiarla = Column(Boolean, default=False)
 
-    usuario_id = Column('user_id', String, ForeignKey('users.id'))
-    usuario = relationship('Usuario', back_populates='claves')
+    usuario_id = Column('user_id', String)
