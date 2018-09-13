@@ -11,20 +11,22 @@ from flask_jsontools import jsonapi
 from dateutil import parser
 import datetime
 
-
 from rest_utils import register_encoder
-
-import oidc
-from oidc.oidc import TokenIntrospection
 
 from . import reset
 from users.model import obtener_session
 
+VERIFY_SSL = bool(int(os.environ.get('VERIFY_SSL',0)))
+
+import oidc
+from oidc.oidc import TokenIntrospection
 client_id = os.environ['OIDC_CLIENT_ID']
 client_secret = os.environ['OIDC_CLIENT_SECRET']
-rs = TokenIntrospection(client_id, client_secret)
+rs = TokenIntrospection(client_id, client_secret, verify=VERIFY_SSL)
 
-
+from warden.sdk.warden import Warden
+warden_url = os.environ['WARDEN_API_URL']
+warden = Warden(warden_url, client_id, client_secret, verify=VERIFY_SSL)
 
 API_BASE=os.environ['API_BASE']
 
@@ -32,32 +34,6 @@ app = Flask(__name__)
 app.debug = True
 register_encoder(app)
 reset.registrarApiReseteoClave(app)
-
-#@app.route(API_BASE + '/usuarios/', methods=['OPTIONS'], defaults={'path':None})
-#@app.route(API_BASE + '/usuarios/<string:path>', methods=['OPTIONS'])
-#@app.route(API_BASE + '/usuarios/<path:path>', methods=['OPTIONS'])
-#@app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['OPTIONS'], defaults={'cid':None})
-#@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['OPTIONS'])
-#@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['OPTIONS'])
-#@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/confirmar', methods=['OPTIONS'])
-#@app.route(API_BASE + '/usuarios/<uid>/claves/', methods=['OPTIONS'])
-# def options(*args, **kwargs):
-#     '''
-#         para autorizar el CORS
-#         https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
-#     '''
-#     o = request.headers.get('Origin')
-#     rm = request.headers.get('Access-Control-Request-Method')
-#     rh = request.headers.get('Access-Control-Request-Headers')
-#
-#     r = make_response()
-#     r.headers['Access-Control-Allow-Methods'] = 'PUT,POST,GET,HEAD,DELETE'
-#     r.headers['Access-Control-Allow-Origin'] = '*'
-#     r.headers['Access-Control-Allow-Headers'] = rh
-#     r.headers['Access-Control-Max-Age'] = 1
-#     import pprint
-#     pprint(r.headers)
-#     return r
 
 @app.after_request
 def cors_after_request(response):
