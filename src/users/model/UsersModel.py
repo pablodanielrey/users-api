@@ -164,7 +164,7 @@ class UsersModel:
                     raise Exception('Legajo existente')
 
                 u.legajo = legajo
-
+        #TODO -> Modificar alta de usuario para contemplar nuevos valores como genero, ciudad, etc.
         session.add(u)
         return u.id
 
@@ -198,16 +198,22 @@ class UsersModel:
             usuario.pais = datos['pais']
         if 'nacimiento' in datos:
             usuario.nacimiento = datos['nacimiento']
+        #TODO ---> Verificar alta de telefonos enviados y baja/reemplazo de telefonos del mismo tipo para el mismo usuario
         '''
         if 'telefonos' in datos:
             telefonos = datos['telefonos']
             for tel in telefonos:
-                if not (session.query(Telefono).filter(Telefono.id == tel.id).one()):
-                    telNuevo = Telefono(numero=tel.numero)
-                    telNuevo.id = str(uuid.uuid4())
-                    telNuevo.tipo = tel.tipo
-                    telNuevo.usuario_id = uid
-                    session.add(telNuevo)
+                if ('numero', 'tipo' in tel):
+                    if not (session.query(Telefono).filter(Telefono.id == tel.id).one()):
+                        telNuevo = Telefono(numero=tel.numero)
+                        telNuevo.id = str(uuid.uuid4())
+                        telNuevo.tipo = tel.tipo
+                        ----------- Marcar fecha de eliminado para el telefono 
+                        anterior que cumpla igual tipo para el mismo usuario
+                            update telephones set eliminado= now() where type='telNuevo.tipo' and usuario_id= 'uid'
+                        ------------
+                        telNuevo.usuario_id = uid
+                        session.add(telNuevo)
         '''
 
     @classmethod
