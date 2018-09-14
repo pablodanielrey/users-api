@@ -5,14 +5,14 @@ from model_utils import Base
 
 class Telefono(Base):
 
-    __tablename__ = 'telephones'
+    __tablename__ = 'telefonos'
 
-    numero = Column('number', String)
-    tipo = Column('type', String)
-    actualizado = Column('actualizado', DateTime)
+    numero = Column(String)
+    tipo = Column(String)
+    actualizado = Column(DateTime)
     eliminado = Column(DateTime)
 
-    usuario_id = Column('user_id', String, ForeignKey('users.id'))
+    usuario_id = Column(String, ForeignKey('usuarios.id'))
     usuario = relationship('Usuario', back_populates='telefonos')
 
 

@@ -53,88 +53,6 @@ class UsersModel:
         if resp.status_code != 200:
             raise UsersError()
 
-
-    @classmethod
-    def login(cls, session, usuario, clave):
-         return session.query(UsuarioClave).filter(UsuarioClave.nombre_de_usuario == usuario, UsuarioClave.clave == clave).one()
-
-
-    @classmethod
-    def claves(cls, session, uid=None, cid=None, limit=None, offset=None):
-        q = session.query(UsuarioClave)
-        q = q.filter(UsuarioClave.id == cid) if cid else q
-        q = q.filter(UsuarioClave.usuario_id == uid) if uid else q
-        cls._aplicar_filtros_comunes(q, offset, limit)
-        q.order_by(UsuarioClave.actualizado.desc(), UsuarioClave.creado.desc())
-        return q.all()
-
-    @classmethod
-    def cambiar_clave(cls, session, uid, clave):
-        '''
-            IMPORANTE!!!!:
-            como ahora no todos los sistemas soportan varias claves en el registro de claves. se elimina la clave anterior.
-            por lo que no queda historial ni eliminación lógica de la clave!!!!
-            cuando todos los sistemas estén usando el nuevo esquema se cambia este método para registrar el historial de claves.
-        '''
-        assert uid is not None
-
-        if not clave:
-            raise FormatoDeClaveIncorrectoError()
-
-        if len(clave) < 8:
-            raise FormatoDeClaveIncorrectoError()
-
-        """
-        uclave = session.query(UsuarioClave).filter(UsuarioClave.usuario_id == uid, UsuarioClave.eliminada == None).one_or_none()
-        if uclave:
-            uclave.eliminada = datetime.datetime.now()
-
-        uuclave = UsuarioClave(usuario_id=uid, nombre_de_usuario=dni, clave=clave)
-        session.add(uuclave)
-        """
-        uclave = session.query(UsuarioClave).filter(UsuarioClave.usuario_id == uid).one_or_none()
-        if uclave:
-            uclave.clave = clave
-            uclave.actualizado = datetime.datetime.now()
-            uclave.debe_cambiarla = False
-        else:
-            dni = session.query(Usuario.dni).filter(Usuario.id == uid).one()
-            uuclave = UsuarioClave(usuario_id=uid, nombre_de_usuario=dni, clave=clave)
-            uuclave.debe_cambiarla = False
-            session.add(uuclave)
-
-        session.commit()
-
-        
-
-        '''
-            lo siguiente debo hacerlo con eventos para desacoplar sistemas y microservicios
-        try:
-            sincronizar_usuario(uclave.usuario_id)
-        except Exception as e:
-            logging.debug(e)
-        '''
-
-    @classmethod
-    def generar_clave(cls, session, uid):
-        assert uid is not None
-        logging.debug(uid)
-        clave=str(uuid.uuid4()).replace('-','')[0:8]
-        uclave = session.query(UsuarioClave).filter(UsuarioClave.usuario_id == uid).one_or_none()
-        if uclave:
-            uclave.clave = clave
-            uclave.actualizado = datetime.datetime.now()
-            uclave.debe_cambiarla = True
-        else:
-            q = session.query(Usuario).filter(Usuario.id == uid)
-            u = q.one_or_none()
-            if not u:
-                raise UsersError(status_code=404)
-            uuclave = UsuarioClave(usuario_id=uid, nombre_de_usuario=u.dni, clave=clave)
-            uuclave.debe_cambiarla = True
-            session.add(uuclave)
-        return clave
-
     @classmethod
     def crear_usuario(cls, session, usuario):
         dni = usuario['dni']
@@ -225,30 +143,22 @@ class UsersModel:
         if dni:
             q = q.filter(Usuario.dni == dni)
 
-        if retornarClave:
-            q = q.join(UsuarioClave).filter(UsuarioClave.eliminada == None).options(contains_eager(Usuario.claves))
         q = q.options(joinedload('mails'), joinedload('telefonos'))
-        q = q.filter(Telefono.eliminado == None)
+        #q = q.filter(Telefono.eliminado == None)
         return q.one()
-
 
     @classmethod
     def encontrarUsuariosModificadosDesde(cls, session, fecha, offset=None, limit=None):
         q = session.query(Usuario)
-        q = q.filter(or_(Usuario.actualizado >= fecha, Usuario.creado >= fecha))
-
-        q3 = session.query(UsuarioClave.usuario_id).filter(or_(UsuarioClave.actualizado >= fecha, UsuarioClave.creado >= fecha, UsuarioClave.eliminada >= fecha))
-        q2 = session.query(Usuario).filter(Usuario.id.in_(q3))
-
+        q1 = q.filter(or_(Usuario.actualizado >= fecha, Usuario.creado >= fecha))
         q4 = session.query(Mail.usuario_id).filter(or_(Mail.actualizado >= fecha, Mail.creado >= fecha, Mail.eliminado >= fecha))
         q5 = session.query(Usuario).filter(Usuario.id.in_(q4))
 
-        q = q.union(q2).union(q5)
+        q = q.union(q1).union(q5)
 
-        q = q.options(joinedload('telefonos'), joinedload('mails'), joinedload('claves'))
+        q = q.options(joinedload('telefonos'), joinedload('mails'))
         q = cls._aplicar_filtros_comunes(q, offset, limit)
         return q.all()
-
 
     @classmethod
     def encontrarUsuariosPorSearch(cls, session, search, retornarClave=False, offset=None, limit=None):
@@ -258,11 +168,6 @@ class UsersModel:
             Usuario.nombre.op('~*')(search),\
             Usuario.apellido.op('~*')(search)\
         )) if search else q
-
-        if retornarClave:
-        #    #q = q.join(UsuarioClave).filter(or_(Usuario.claves == None, UsuarioClave.eliminada == None)).options(contains_eager(Usuario.claves))
-        #    q = q.join(UsuarioClave).options(contains_eager(Usuario.claves))
-            q = q.options(joinedload('claves'))
 
         q = q.options(joinedload('telefonos'))
         q = q.options(joinedload('mails'))
@@ -313,10 +218,11 @@ class UsersModel:
                 m.confirmado = datetime.datetime.now()
             return m.id
 
-        mail = Mail(email=datos['email'].lower())
+        mail = Mail()
         mail.id = str(uuid.uuid4())
         mail.usuario_id = uid
         mail.confirmado = datetime.datetime.now()
+        mail.email = datos['email'].lower()
         session.add(mail)
         return mail
 
@@ -397,3 +303,4 @@ class UsersModel:
         r = requests.post('http://163.10.56.57:8001/emails/api/v1.0/enviar_correo', json={'de':de, 'para':para, 'asunto':asunto, 'cuerpo':bcuerpo})
         print(str(r))
     """
+

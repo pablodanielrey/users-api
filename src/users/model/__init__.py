@@ -18,12 +18,13 @@ EMAILS_API_URL = os.environ['EMAILS_API_URL']
 
 @contextlib.contextmanager
 def obtener_session():
-    engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
+    engine = create_engine('postgresql://{}:{}@{}:{}/{}'.format(
         os.environ['USERS_DB_USER'],
         os.environ['USERS_DB_PASSWORD'],
         os.environ['USERS_DB_HOST'],
+        os.environ['USERS_DB_PORT'],
         os.environ['USERS_DB_NAME']
-    ), echo=True)
+    ), echo=False)
 
     Session = sessionmaker(bind=engine, autoflush=False, autocommit=False)
     session = Session()
@@ -48,21 +49,9 @@ def enviar_correo(de, para, asunto, cuerpo):
     r = requests.post(EMAILS_API_URL + '/correos/', json={'sistema':'users', 'de':de, 'para':para, 'asunto':asunto, 'cuerpo':bcuerpo})
     return r
 
-def crear_tablas():
-    #engine.execute(CreateSchema('users'))
-    engine = create_engine('postgresql://{}:{}@{}:5432/{}'.format(
-        os.environ['USERS_DB_USER'],
-        os.environ['USERS_DB_PASSWORD'],
-        os.environ['USERS_DB_HOST'],
-        os.environ['USERS_DB_NAME']
-    ), echo=True)
-
-    Base.metadata.create_all(engine)
 
 from .UsersModel import UsersModel
-from .ResetClaveModel import ResetClaveModel
 
 __all__ = [
-    'UsersModel',
-    'ResetClaveModel'
+    'UsersModel'
 ]

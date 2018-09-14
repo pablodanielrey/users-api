@@ -8,10 +8,10 @@ class Mail(Base):
 
     __tablename__ = 'mails'
 
-    email = Column('email', String)
-    confirmado = Column('confirmado',DateTime)
+    email = Column(String)
+    confirmado = Column(DateTime)
     hash = Column(String)
-    eliminado = Column('eliminado', DateTime)
+    eliminado = Column(DateTime)
 
-    usuario_id = Column('user_id', String, ForeignKey('users.id'))
+    usuario_id = Column(String, ForeignKey('usuarios.id'))
     usuario = relationship('Usuario', back_populates='mails')
