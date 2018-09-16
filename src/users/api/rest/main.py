@@ -30,13 +30,6 @@ app = Flask(__name__)
 app.debug = True
 register_encoder(app)
 
-@app.after_request
-def cors_after_request(response):
-    if not response.headers.get('Access-Control-Allow-Origin',None):
-        response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
-    return response
 
 # @app.route(API_BASE + '/avatar/<hash>.json', methods=['GET'])
 # @jsonapi
@@ -284,9 +277,22 @@ def chequear_disponibilidad_cuenta(cuenta, token=None):
         else:
             return {'existe':False, 'correo':None}
 
+@app.route(API_BASE + '*', methods=['OPTIONS'])
+def options():
+    if request.method == 'OPTIONS':
+        return 204
+    return 204
+
+def cors_after_request(response):
+    if not response.headers.get('Access-Control-Allow-Origin',None):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+    return response
 
 @app.after_request
 def add_header(r):
+    r = cors_after_request(r)
     """
     Add headers to both force latest IE rendering engine or Chrome Frame,
     and also to cache the rendered page for 10 minutes.
