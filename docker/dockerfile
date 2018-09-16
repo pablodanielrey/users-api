@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
 
 ENV TZ=America/Argentina/Buenos_Aires
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN pip install --upgrade pip
 
 COPY docker/pip.conf /etc/
 COPY docker/entrypoint.sh /
