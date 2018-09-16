@@ -16,7 +16,6 @@ from users.model import obtener_session
 
 VERIFY_SSL = bool(int(os.environ.get('VERIFY_SSL',0)))
 OIDC_URL = os.environ['OIDC_URL']
-
 client_id = os.environ['OIDC_CLIENT_ID']
 client_secret = os.environ['OIDC_CLIENT_SECRET']
 
@@ -38,9 +37,6 @@ def cors_after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
     return response
-
-
-import requests
 
 # @app.route(API_BASE + '/avatar/<hash>.json', methods=['GET'])
 # @jsonapi
@@ -84,26 +80,6 @@ def obtener_avatar_por_usuario(uid, token=None):
 def obtener_avatar_binario_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar_binario(h)
-
-
-@app.route(API_BASE + '/auth', methods=['POST'])
-@warden.require_valid_token
-@jsonapi
-def auth(token=None):
-    logging.debug('Token RECIBIDO : {}'.format(token))
-
-    '''
-        chequeo que solo sea la app de consent la que pueda llamar a este método
-        client_id = consent
-    '''
-    if token['client_id'] != 'consent':
-        return {'error':'No permitido', 'status_code':403}, 403
-
-    data = json.loads(request.data)
-    usuario = data['usuario']
-    clave = data['clave']
-    with obtener_session() as session:
-        return UsersModel.login(session, usuario, clave)
 
 @app.route(API_BASE + '/usuarios', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
@@ -168,31 +144,6 @@ def actualizar_usuario(uid, token=None):
     with obtener_session() as session:
         UsersModel.actualizar_usuario(session, uid, datos)
         session.commit()
-
-'''
-    para los chequeos de precondiciones
-'''
-
-@app.route(API_BASE + '/usuarios/<uid>/precondiciones', methods=['GET'])
-@warden.require_valid_token
-@jsonapi
-def precondiciones(uid, token=None):
-    precondiciones = {}
-    with obtener_session() as session:
-        precondiciones['clave'] = {'debe_cambiarla':False}
-        claves = UsersModel.claves(session, uid)
-        for c in claves:
-            if c.debe_cambiarla:
-                precondiciones['clave']['debe_cambiarla'] = True
-                break
-
-        precondiciones['correos'] = {'tiene_alternativo':False}
-        correos = UsersModel.correos(session, usuario=uid)
-        for c in correos:
-            if 'econo.unlp.edu.ar' not in c.email and c.confirmado and not c.eliminado:
-                precondiciones['correos']['tiene_alternativo'] = True
-                break
-    return precondiciones
 
 @app.route(API_BASE + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
 @app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
