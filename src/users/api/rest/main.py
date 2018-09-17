@@ -30,17 +30,17 @@ app = Flask(__name__)
 app.debug = True
 register_encoder(app)
 
+DEBUGGING = bool(int(os.environ.get('VSC_DEBUGGING',0)))
 def configurar_debugger():
     """
     para debuggear con visual studio code
     """
-    if bool(int(os.environ.get('VSC_DEBUGGING',0))):
-        if not int(os.environ.get('PRODUCCION',0)):
-            print('Iniciando Debugger PTVSD')
-            import ptvsd
-            #secret = os.environ.get('VSC_DEBUG_KEY',None)
-            port = int(os.environ.get('VSC_DEBUGGING_PORT', 5678))
-            ptvsd.enable_attach(address=('0.0.0.0',port))
+    if DEBUGGING:
+        print('Iniciando Debugger PTVSD')
+        import ptvsd
+        #secret = os.environ.get('VSC_DEBUG_KEY',None)
+        port = int(os.environ.get('VSC_DEBUGGING_PORT', 5678))
+        ptvsd.enable_attach(address=('0.0.0.0',port))
 
 configurar_debugger()
 
@@ -295,6 +295,11 @@ def chequear_disponibilidad_cuenta(cuenta, token=None):
 @app.route('/<path:path>', methods=['GET','POST','PUT','PATCH'])
 def catch_all(path):
     return ('no permitido', 401)
+
+if DEBUGGING:
+    @app.before_request
+    def br():
+        logging.info('request')
 
 @app.route(API_BASE + '*', methods=['OPTIONS'])
 def options():
