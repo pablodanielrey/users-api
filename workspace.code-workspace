@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "/src/gitlab/stacks"
+		},
+		{
+			"path": "/src/github/warden-api"
 		}
 	]
 }

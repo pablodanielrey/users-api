@@ -91,9 +91,14 @@ def obtener_avatar_binario_por_usuario(uid, token=None):
 @app.route(API_BASE + '/usuarios', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/<uid>', methods=['GET'])
-@warden.require_valid_token
+#@warden.require_valid_token
 @jsonapi
 def usuarios(uid, token=None):
+
+    token = warden._require_valid_token()
+    if not token:
+        return warden._invalid_token()
+
     search = request.args.get('q', None)
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
@@ -299,7 +304,7 @@ def catch_all(path):
 if DEBUGGING:
     @app.before_request
     def br():
-        logging.info('request')
+        logging.info(request)
 
 @app.route(API_BASE + '*', methods=['OPTIONS'])
 def options():
