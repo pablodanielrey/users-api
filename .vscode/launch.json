@@ -6,7 +6,7 @@
             "type": "python",
             "request": "attach",
             "port": 5678,
-            "host": "localhost",
+            "host": "163.10.17.12",
         },
         {
             "name": "Python: Flask (0.11.x or later)",
