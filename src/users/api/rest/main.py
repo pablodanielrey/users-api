@@ -88,7 +88,6 @@ def obtener_avatar_binario_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar_binario(h)
 
-@app.route(API_BASE + '/usuarios', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/<uid>', methods=['GET'])
 #@warden.require_valid_token

@@ -7,6 +7,10 @@
             "request": "attach",
             "port": 5678,
             "host": "163.10.17.12",
+            "pathMappings": [{
+                "localRoot": "${workspaceFolder}",
+                "remoteRoot": "/"
+            }]
         },
         {
             "name": "Attach (Local Debug)",
