@@ -37,7 +37,8 @@ setup(name='users',
                             'flask_jsontools',
                             'gunicorn',
                             'microservices_common',
-                            'warden-api'],
+                            'warden-api',
+                            'ptvsd'],
           entry_points={
             'console_scripts': [
                 'rest=users.api.rest.main:main'
