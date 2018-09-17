@@ -291,6 +291,11 @@ def chequear_disponibilidad_cuenta(cuenta, token=None):
         else:
             return {'existe':False, 'correo':None}
 
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>', methods=['GET','POST','PUT','PATCH'])
+def catch_all(path):
+    return ('no permitido', 401)
+
 @app.route(API_BASE + '*', methods=['OPTIONS'])
 def options():
     if request.method == 'OPTIONS':
