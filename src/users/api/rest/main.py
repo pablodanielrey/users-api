@@ -35,11 +35,12 @@ def configurar_debugger():
     para debuggear con visual studio code
     """
     if bool(int(os.environ.get('VSC_DEBUGGING',0))):
-        #if os.environ.get('WERKZEUG_RUN_MAIN'):
-        print('Iniciando Debugger PTVSD')
-        import ptvsd
-        #secret = os.environ.get('VSC_DEBUG_KEY',None)
-        ptvsd.enable_attach(address=('0.0.0.0',5678))
+        if os.environ.get('WERKZEUG_RUN_MAIN'):
+            print('Iniciando Debugger PTVSD')
+            import ptvsd
+            #secret = os.environ.get('VSC_DEBUG_KEY',None)
+            port = int(os.environ.get('VSC_DEBUGGING_PORT', 5678))
+            ptvsd.enable_attach(address=('0.0.0.0',port))
 
 configurar_debugger()
 
