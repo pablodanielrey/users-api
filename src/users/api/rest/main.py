@@ -35,7 +35,7 @@ def configurar_debugger():
     para debuggear con visual studio code
     """
     if bool(int(os.environ.get('VSC_DEBUGGING',0))):
-        if os.environ.get('WERKZEUG_RUN_MAIN'):
+        if not int(os.environ.get('PRODUCCION',0)):
             print('Iniciando Debugger PTVSD')
             import ptvsd
             #secret = os.environ.get('VSC_DEBUG_KEY',None)
@@ -328,10 +328,6 @@ def rutas():
         links.append(url)
     return links
 '''
-
-
-
-
 
 def main():
     app.run(host='0.0.0.0', port=9005, debug=False)
