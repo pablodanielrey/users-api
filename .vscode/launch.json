@@ -5,7 +5,7 @@
             "name": "Attach (Remote Debug)",
             "type": "python",
             "request": "attach",
-            "port": 5678,
+            "port": 10104,
             "host": "163.10.17.12",
             "pathMappings": [{
                 "localRoot": "${workspaceFolder}",
@@ -16,7 +16,7 @@
             "name": "Attach (Local Debug)",
             "type": "python",
             "request": "attach",
-            "port": 5678,
+            "port": 10104,
             "host": "localhost",
         },        
         {
@@ -34,7 +34,7 @@
                 "--no-debugger",
                 "--no-reload",
                 "--host=0.0.0.0",
-                "--port=9005"
+                "--port=10102"
             ]
         }
     ]
