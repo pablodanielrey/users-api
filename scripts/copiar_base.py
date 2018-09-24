@@ -51,16 +51,20 @@ if __name__ == '__main__':
             actualizado = c[2]
             email = c[3].replace(' ','').lower()
             if not s.query(Mail).filter(Mail.id == mid).one_or_none():
-               print('creando {}'.format(email))
-               m = Mail()
-               m.id = mid
-               m.creado = creado
-               m.actualizado = actualizado
-               m.email = email
-               m.usuario_id = c[4]
-               m.eliminado = c[5]
-               m.confirmado = c[6]
-               s.add(m)
-               s.commit()
+                try:
+                    print('creando {}'.format(email))
+                    m = Mail()
+                    m.id = mid
+                    m.creado = creado
+                    m.actualizado = actualizado
+                    m.email = email
+                    m.usuario_id = c[4]
+                    m.eliminado = c[5]
+                    m.confirmado = c[6]
+                    s.add(m)
+                    s.commit()
+                except Exception as e:
+                    logging.exception(e)
+                    s.rollback()
 
 
