@@ -97,15 +97,15 @@ class UsersModel:
 
         if 'telefonos' in usuario:
             for tel in usuario['telefonos']:
-                if tel.tipo == 'fijo':
+                if tel['tipo'] == 'fijo':
                     telFijo = Telefono()
-                    telFijo.numero = tel.numero
+                    telFijo.numero = tel['numero']
                     telFijo.tipo = 'fijo'
                     telFijo.usuario_id = u.id
                     session.add(telFijo)
-                if tel.tipo == 'movil':
+                if tel['tipo'] == 'movil':
                     telMovil = Telefono()
-                    telMovil.numero = tel.numero
+                    telMovil.numero = tel['numero']
                     telMovil.tipo = 'movil'
                     telMovil.usuario_id = u.id
                     session.add(telMovil)
