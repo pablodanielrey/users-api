@@ -88,6 +88,26 @@ def obtener_avatar_binario_por_usuario(uid, token=None):
     h = hashlib.md5(uid.encode()).hexdigest()
     return obtener_avatar_binario(h)
 
+@app.route(API_BASE + '/usuario_por_dni/<dni>', methods=['GET'])
+#@warden.require_valid_token
+@jsonapi
+def usuario_por_dni(dni, token=None):
+    """
+    token = warden._require_valid_token()
+    if not token:
+        return warden._invalid_token()
+
+    dni = request.args.get('dni', None)
+    assert dni is not None
+
+    prof = warden.has_all_profiles(token, ['users-super-admin'])
+    if not prof or not prof['profile']:
+        return ('Insuficient access', 401)
+    """
+    with obtener_session() as s:
+        u = UsersModel.usuario_por_dni(session=s, dni=dni)
+        return u
+
 @app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/<uid>', methods=['GET'])
 #@warden.require_valid_token

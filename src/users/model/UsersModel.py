@@ -167,7 +167,13 @@ class UsersModel:
                         ------------
         '''
 
-                        
+    @classmethod
+    def usuario_por_dni(cls, session, dni=None):
+        assert dni is not None
+        q = session.query(Usuario).filter(Usuario.dni == dni)
+        q = q.options(joinedload('mails'), joinedload('telefonos'))
+        u = q.one_or_none()
+        return u
 
     @classmethod
     def usuario(cls, session, uid=None, dni=None, retornarClave=False):
