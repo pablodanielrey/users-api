@@ -102,6 +102,7 @@ def usuarios(uid, token=None):
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
 
+    mostrarClave = False
     admin = False
     prof = warden.has_all_profiles(token, ['users-super-admin'])
     if prof and prof['profile']:
