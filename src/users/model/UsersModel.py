@@ -83,7 +83,33 @@ class UsersModel:
 
                 u.legajo = legajo
         #TODO -> Modificar alta de usuario para contemplar nuevos valores como genero, ciudad, etc.
+        if 'genero' in usuario:
+            u.genero = usuario['genero']
+        if 'direccion' in usuario:
+            u.direccion = usuario['direccion']
+        if 'ciudad' in usuario:
+            u.ciudad = usuario['ciudad']
+        if 'pais' in usuario:
+            u.pais = usuario['pais']
+        if 'nacimiento' in usuario:
+            u.nacimiento = usuario['nacimiento']
         session.add(u)
+
+        if 'telefonos' in usuario:
+            for tel in usuario['telefonos']:
+                if tel.tipo == 'fijo':
+                    telFijo = Telefono()
+                    telFijo.numero = tel.numero
+                    telFijo.tipo = 'fijo'
+                    telFijo.usuario_id = u.id
+                    session.add(telFijo)
+                if tel.tipo == 'movil':
+                    telMovil = Telefono()
+                    telMovil.numero = tel.numero
+                    telMovil.tipo = 'movil'
+                    telMovil.usuario_id = u.id
+                    session.add(telMovil)
+                
         return u.id
 
     @classmethod
@@ -118,21 +144,30 @@ class UsersModel:
             usuario.nacimiento = datos['nacimiento']
         #TODO ---> Verificar alta de telefonos enviados y baja/reemplazo de telefonos del mismo tipo para el mismo usuario
         '''
-        if 'telefonos' in datos:
-            telefonos = datos['telefonos']
-            for tel in telefonos:
-                if ('numero', 'tipo' in tel):
-                    if not (session.query(Telefono).filter(Telefono.id == tel.id).one()):
+        if 'telefonos' in datos:            
+            for tel in datos['telefonos']:
+                if ('numero' and 'tipo') in tel:
+                    if tel['id'] is None:
                         telNuevo = Telefono(numero=tel.numero)
                         telNuevo.id = str(uuid.uuid4())
                         telNuevo.tipo = tel.tipo
-                        ----------- Marcar fecha de eliminado para el telefono 
-                        anterior que cumpla igual tipo para el mismo usuario
-                            update telephones set eliminado= now() where type='telNuevo.tipo' and usuario_id= 'uid'
-                        ------------
                         telNuevo.usuario_id = uid
                         session.add(telNuevo)
+                        -----------
+                        Como agrego uno nuevo debo marcar los telefonos anteriores del mismo tipo como eliminados
+                        -----------
+                    else:
+                        -----------
+                        Como es existente consulto si no fue eliminado, si no lo elimino
+                        -----------
+                        if tel.eliminado is not None:
+
+                        
+                        update(Telefono).where(usuario_id == uid and tipo == tel.tipo).values(eliminado = datetime.datetime.now()) 
+                        ------------
         '''
+
+                        
 
     @classmethod
     def usuario(cls, session, uid=None, dni=None, retornarClave=False):
