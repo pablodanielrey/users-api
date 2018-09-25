@@ -14,13 +14,14 @@ if __name__ == '__main__':
     import csv
     import uuid
 
-    h = os.environ['USERS_OLD_DB_HOST']
-    pp = os.environ['USERS_OLD_DB_PORT']
-    n = os.environ['USERS_OLD_DB_NAME']
-    u = os.environ['USERS_OLD_DB_USER']
-    p = os.environ['USERS_OLD_DB_PASSWORD']
+    login = {}
 
-    conn = psycopg2.connect(dbname=n, host=h, port=pp, user=u, password=p)
+    h = os.environ['USERS_DB_HOST']
+    n = os.environ['USERS_DB_NAME']
+    u = os.environ['USERS_DB_USER']
+    p = os.environ['USERS_DB_PASSWORD']
+
+    conn = psycopg2.connect(dbname=n, host=h, user=u, password=p)
     try:
         cur = conn.cursor()
         try:
@@ -36,17 +37,41 @@ if __name__ == '__main__':
                     correo = a[4].lower().strip()
                     uid = str(uuid.uuid4())
                     #logging.info('importando {} {} {}'.format(nombre, apellido, dni))
-                    cur.execute('select id, name, lastname from users where dni = %s', (dni,))
+                    cur.execute('select id from usuarios where dni = %s', (dni,))
 
                     if cur.rowcount > 0:
                         logging.info('{},{},{},ya existe. no se lo toca'.format(nombre,apellido,dni))
                     else:
                         logging.info('{},{},{},importado'.format(nombre,apellido,dni))
-                        cur.execute('insert into users (id,name,lastname,dni) values (%s,%s,%s,%s)', (uid, nombre, apellido, dni))
+                        cur.execute('insert into usuarios (id,nombre,apellido,dni) values (%s,%s,%s,%s)', (uid, nombre, apellido, dni))
                         mid = str(uuid.uuid4())
-                        cur.execute('insert into mails (id,user_id,email,confirmado) values (%s,%s,%s,NOW())', (mid, uid, correo))
-                        pid = str(uuid.uuid4())
-                        cur.execute('insert into user_password (id,user_id,username,password,debe_cambiarla) values (%s,%s,%s,%s,false)', (pid,uid,dni,'accesounlp'))
+                        cur.execute('insert into mails (id,usuario_id,email,confirmado) values (%s,%s,%s,NOW())', (mid, uid, correo))
+                        login[uid] = dni
+
+            #conn.commit()
+
+        except Exception as e:
+            logging.exception(e)
+
+    finally:
+        conn.close()
+
+
+    h = os.environ['LOGIN_DB_HOST']
+    n = os.environ['LOGIN_DB_NAME']
+    u = os.environ['LOGIN_DB_USER']
+    p = os.environ['LOGIN_DB_PASSWORD']
+
+    conn = psycopg2.connect(dbname=n, host=h, user=u, password=p)
+    try:
+        cur = conn.cursor()
+        try:
+
+            archivo = sys.argv[1]
+            for uid in login.keys():
+                dni = login[uid]
+                pid = str(uuid.uuid4())
+                cur.execute('insert into user_password (id,user_id,username,password,debe_cambiarla) values (%s,%s,%s,%s,false)', (pid,uid,dni,'accesounlp'))
 
             #conn.commit()
 
