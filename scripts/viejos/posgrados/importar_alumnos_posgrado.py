@@ -6,7 +6,7 @@ if __name__ == '__main__':
     import logging
     import datetime
     logging.getLogger().setLevel(logging.DEBUG)
-    hdlr = logging.FileHandler('/tmp/importar_posgrado.log')
+    hdlr = logging.FileHandler('/tmp/importar_posgrado_base1.log',encoding='utf-8')
     formatter = logging.Formatter('%(asctime)s,%(levelname)s,%(message)s')
     hdlr.setFormatter(formatter)
     logging.getLogger().addHandler(hdlr)
@@ -26,7 +26,7 @@ if __name__ == '__main__':
         try:
 
             archivo = sys.argv[1]
-            with open(archivo,'r') as f:
+            with open(archivo,'r', encoding='utf-8') as f:
                 cr = csv.reader(f,delimiter=',')
                 for a in cr:
                     #logging.info(a)
@@ -41,14 +41,14 @@ if __name__ == '__main__':
                     if cur.rowcount > 0:
                         logging.info('{},{},{},ya existe. no se lo toca'.format(nombre,apellido,dni))
                     else:
-                        logging.info('{},{},{},importado'.format(nombre,apellido,dni))
+                        logging.info('{},{},{},{},importado'.format(nombre,apellido,dni,correo))
                         cur.execute('insert into users (id,name,lastname,dni) values (%s,%s,%s,%s)', (uid, nombre, apellido, dni))
                         mid = str(uuid.uuid4())
                         cur.execute('insert into mails (id,user_id,email,confirmado) values (%s,%s,%s,NOW())', (mid, uid, correo))
                         pid = str(uuid.uuid4())
                         cur.execute('insert into user_password (id,user_id,username,password,debe_cambiarla) values (%s,%s,%s,%s,false)', (pid,uid,dni,'accesounlp'))
 
-            #conn.commit()
+            conn.commit()
 
         except Exception as e:
             logging.exception(e)
