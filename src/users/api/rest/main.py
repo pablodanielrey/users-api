@@ -92,7 +92,6 @@ def obtener_avatar_binario_por_usuario(uid, token=None):
 #@warden.require_valid_token
 @jsonapi
 def usuario_por_dni(dni, token=None):
-    """
     token = warden._require_valid_token()
     if not token:
         return warden._invalid_token()
@@ -103,7 +102,7 @@ def usuario_por_dni(dni, token=None):
     prof = warden.has_all_profiles(token, ['users-super-admin'])
     if not prof or not prof['profile']:
         return ('Insuficient access', 401)
-    """
+
     with obtener_session() as s:
         u = UsersModel.usuario_por_dni(session=s, dni=dni)
         return u
