@@ -27,7 +27,7 @@ if __name__ == '__main__':
             try:
                 cur2 = conn2.cursor()
                 try:
-                    cur2.execute('select id, dni, nombre, apellido, genero, nacimiento, ciudad, pais, direccion, tipo, avatar from users where dirty= %s', (True,))
+                    cur2.execute('select id, dni, nombre, apellido, genero, nacimiento, ciudad, pais, direccion, tipo, avatar from usuarios where dirty= %s', (True,))
                     for u in cur2.fetchall():
                         uid = u[0]
                         dni = u[1]
@@ -40,10 +40,9 @@ if __name__ == '__main__':
                         dire = u[8]
                         tipo = u[9]
                         av = u[10]
-                        cur.execute('select dni from usuarios where dni = %s', (dni,))
 
                         try:
-
+                            cur.execute('select dni from users where dni = %s', (dni,))
                             if cur.rowcount > 0:
                                 logging.info('{},{},{},existe - se actualiza'.format(nombre,apellido,dni))
                                 cur.execute('update users set name = %s, lastname = %s, gender = %s, birthdate = %s, city = %s, country = %s, address = %s, type = %s, avatar = %s',
@@ -55,7 +54,7 @@ if __name__ == '__main__':
                                 
                             ''' sinc correos '''
                             ''' elimino los correos de la base vieja para este usuario'''
-                            cur.execute('delete from mails where usuario_id = %s',(uid,))
+                            cur.execute('delete from mails where user_id = %s',(uid,))
                         
                             ''' actualizo los correos '''
                             cur2.execute('select id, email from mails where eliminado is null and confirmado is not null and usuario_id = %s)', (uid,))
