@@ -160,7 +160,7 @@ class UsersModel:
                 else:
                     '''Como es existente consulto si no fue eliminado, si no lo elimino'''
                     if tel['eliminado'] is not None:
-                        telefono = session.query(Telefono).filter(Telefono.id == tel['id']).one()
+                        telefono = session.query(Telefono).filter(Telefono.id == tel['id'], Telefono.eliminado is None).one()
                         telefono.eliminado = datetime.datetime.now()
 
 
