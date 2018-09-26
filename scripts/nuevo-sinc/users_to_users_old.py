@@ -27,7 +27,7 @@ if __name__ == '__main__':
             try:
                 cur2 = conn2.cursor()
                 try:
-                    cur2.execute('select id, dni, nombre, apellido, genero, nacimiento, ciudad, pais, direccion, tipo, avatar from usuarios where dirty= %s', (True,))
+                    cur2.execute('select id, dni, nombre, apellido, genero, nacimiento, ciudad, pais, direccion, tipo, avatar, legajo from usuarios where dirty= %s', (True,))
                     for u in cur2.fetchall():
                         uid = u[0]
                         dni = u[1]
@@ -40,28 +40,29 @@ if __name__ == '__main__':
                         dire = u[8]
                         tipo = u[9]
                         av = u[10]
+                        legajo = u[11]
 
                         try:
                             cur.execute('select dni from users where dni = %s', (dni,))
                             if cur.rowcount > 0:
-                                logging.info('{},{},{},existe - se actualiza'.format(nombre,apellido,dni))
-                                cur.execute('update users set name = %s, lastname = %s, gender = %s, birthdate = %s, city = %s, country = %s, address = %s, type = %s, avatar = %s',
-                                                            (nombre,app,gen,nac,ciu,pa,dire,tipo,av))
+                                logging.info('{},{},{},existe - se actualiza'.format(nombre,app,dni))
+                                cur.execute('update users set name = %s, lastname = %s, gender = %s, birthdate = %s, city = %s, country = %s, address = %s, type = %s, avatar = %s, legajo = %s where dni = %s',
+                                                            (nombre,app,gen,nac,ciu,pa,dire,tipo,av,legajo,dni))
                             else:
-                                logging.info('{},{},{},no existe - se inserta'.format(nombre,apellido,dni))
-                                cur.execute('insert into users (id, dni, name, lastname, gender, birthdate, city, country, address, type, avatar) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', 
-                                                            (uid, dni, nombre, app, gen, nac, ciu, pa, dire, tipo, av))
+                                logging.info('{},{},{},no existe - se inserta'.format(nombre,app,dni))
+                                cur.execute('insert into users (id, dni, name, lastname, gender, birthdate, city, country, address, type, avatar,legajo) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', 
+                                                            (uid, dni, nombre, app, gen, nac, ciu, pa, dire, tipo, av,legajo))
                                 
                             ''' sinc correos '''
                             ''' elimino los correos de la base vieja para este usuario'''
                             cur.execute('delete from mails where user_id = %s',(uid,))
                         
                             ''' actualizo los correos '''
-                            cur2.execute('select id, email from mails where eliminado is null and confirmado is not null and usuario_id = %s)', (uid,))
+                            cur2.execute('select id, email from mails where eliminado is null and confirmado is not null and usuario_id = %s', (uid,))
                             for m in cur2.fetchall():
                                 mid = m[0]
                                 email = m[1]
-                                logging.info('insertando correo {} {} {} {}'.format(dni.nombre,app,email))
+                                logging.info('insertando correo {} {} {} {}'.format(dni,nombre,app,email))
                                 cur.execute('insert into mails (id, user_id, email, confirmado) values (%s,%s,%s,NOW())', (mid, uid, email))
 
                             #conn.commit()
@@ -76,7 +77,7 @@ if __name__ == '__main__':
 
                         except Exception as e1:
                             conn.rollback()
-                            loggin.exception(e1)
+                            logging.exception(e1)
 
                 finally:
                     cur2.close()
