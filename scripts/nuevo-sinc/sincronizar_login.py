@@ -29,7 +29,7 @@ if __name__ == '__main__':
             for l in cur.fetchall():
                 logging.info('agregando {} para sincronizar'.format(l[0]))
                 claves.append({
-                    'uid':l[0]
+                    'uid':l[0],
                     'dni':l[1],
                     'clave':l[2],
                     'actualizado':False
