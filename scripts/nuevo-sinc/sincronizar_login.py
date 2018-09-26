@@ -1,4 +1,10 @@
 
+import os
+import psycopg2
+import sys
+import logging
+logging.getLogger().setLevel(logging.DEBUG)
+
 if __name__ == '__main__':
 
     claves = []
@@ -9,12 +15,16 @@ if __name__ == '__main__':
     u = os.environ['LOGIN_DB_USER']
     p = os.environ['LOGIN_DB_PASSWORD']
 
+    """
+        veo quien necesita actualizacion
+    """
+
     conn = psycopg2.connect(dbname=n, host=h, port=pp, user=u, password=p)
     try:
 
         cur = conn.cursor()
         try:
-            cur.execute('select dni, clave from usuario_clave where dirty = %s', (True,))
+            cur.execute('select usuario, clave from usuario_clave where dirty = %s', (True,))
             for l in cur.fetchall():
                 logging.info('agregando {} para sincronizar'.format(l[0]))
                 claves.append({
@@ -29,6 +39,10 @@ if __name__ == '__main__':
     finally:
         conn.close()
 
+
+    """
+        actualizo las claves
+    """
 
     h = os.environ['USERS_OLD_DB_HOST']
     pp = os.environ['USERS_OLD_DB_PORT']
@@ -46,6 +60,7 @@ if __name__ == '__main__':
                 logging.info('{} - clave'.format(dni))
                 cur.execute('update user_password set password = %s, actualizado = NOW() where username = %s', (dni,clave))
                 con.commit()
+                u['actualizado'] = True
     
         except Exception as e:
             u['actualizado'] = False
@@ -78,7 +93,7 @@ if __name__ == '__main__':
                     if u['actualizado']:
                         dni = u['dni']
                         logging.info('{} - dirty = False'.format(dni))
-                        cur.execute('update usuario_clave set dirty = %s where dni = %s', (False,dni))
+                        cur.execute('update usuario_clave set dirty = %s where usuario = %s', (False,dni))
                         conn.commit()
                 except Exception as e:
                     logging.exception(e)
