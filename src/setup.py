@@ -12,7 +12,7 @@
 from setuptools import setup, find_packages
 
 setup(name='users',
-          version='1.0.2.a1',
+          version='1.0.2.a2',
           description='Proyecto que implementa la api de usuarios',
           url='https://github.com/pablodanielrey/users-api',
           author='Desarrollo DiTeSi, FCE',
@@ -35,6 +35,7 @@ setup(name='users',
                             'pyjwt',
                             'Flask',
                             'flask_jsontools',
+                            'jinja2',
                             'gunicorn',
                             'microservices_common',
                             'warden-api',

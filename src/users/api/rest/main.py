@@ -226,12 +226,12 @@ def agregar_correo(uid, token=None):
 
     assert uid != None
     datos = json.loads(request.data)
-    print(datos)
     with obtener_session() as session:
         cid = UsersModel.agregar_correo(session=session, uid=uid, datos=datos)
         session.commit()
         UsersModel.enviar_confirmar_correo(session, cid)
         session.commit()
+        return {'cid':cid}
 
 @app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['DELETE'])
 @app.route(API_BASE + '/correos/<cid>', methods=['DELETE'])

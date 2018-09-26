@@ -8,7 +8,7 @@ import logging
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import joinedload, contains_eager
 
-from . import obtener_template, enviar_correo
+from .MailsModel import MailsModel
 from .exceptions import *
 from .entities import *
 
@@ -294,6 +294,8 @@ class UsersModel:
         if not correo:
             raise CorreoNoEncontradoError()
         correo.confirmado = datetime.datetime.now()
+        correo.usuario.dirty = True
+        correo.usuario.google = True
 
     @classmethod
     def enviar_confirmar_correo(cls, session, cid):
@@ -304,8 +306,9 @@ class UsersModel:
         mail = correo.email.lower().strip()
         codigo = correo.hash
         nombre = correo.usuario.nombre + ' ' + correo.usuario.apellido
-        cuerpo = obtener_template('confirmar_correo.html', nombre, correo.hash)
-        enviar_correo('pablo.rey@econo.unlp.edu.ar', mail, 'Confirmación de cuenta alternativa de contacto', cuerpo)
+        tmpl = cuerpo = MailsModel.obtener_template('confirmar_correo.tmpl')
+        cuerpo = tmpl.render(nombre=nombre, codigo=codigo)
+        MailsModel.enviar_correo('sistemas@econo.unlp.edu.ar', mail, 'Confirmación de cuenta alternativa de contacto FCE', cuerpo)
 
 
     """

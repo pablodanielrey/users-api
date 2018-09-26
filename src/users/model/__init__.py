@@ -35,21 +35,6 @@ def obtener_session():
         engine.dispose()
 
 
-def obtener_template(template, nombre, codigo):
-    with open('users/model/templates/' + template,'r') as f:
-        template = f.read()
-        texto = template.replace('$USUARIO',nombre)\
-                .replace('$CODIGO_CONFIRMACION',codigo)\
-                .replace('$URL_DE_INFORME','http://incidentes.econo.unlp.edu.ar/0293094-df2323-r4354-f34543')
-        return texto
-
-def enviar_correo(de, para, asunto, cuerpo):
-    ''' https://developers.google.com/gmail/api/guides/sending '''
-    bcuerpo = base64.urlsafe_b64encode(cuerpo.encode('utf-8')).decode()
-    r = requests.post(EMAILS_API_URL + '/correos/', json={'sistema':'users', 'de':de, 'para':para, 'asunto':asunto, 'cuerpo':bcuerpo})
-    return r
-
-
 from .UsersModel import UsersModel
 
 __all__ = [

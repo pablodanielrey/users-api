@@ -18,6 +18,7 @@ class Usuario(Base):
     direccion = Column(String)
     tipo = Column(String)
     google = Column(Boolean)
+    dirty = Column(Boolean)
     avatar = Column(String)
     legajo = Column(String, unique=True)
 
