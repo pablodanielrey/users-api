@@ -65,11 +65,11 @@ if __name__ == '__main__':
                                 logging.info('insertando correo {} {} {} {}'.format(dni,nombre,app,email))
                                 cur.execute('insert into mails (id, user_id, email, confirmado) values (%s,%s,%s,NOW())', (mid, uid, email))
 
-                            #conn.commit()
+                            conn.commit()
 
                             try:
                                 cur2.execute('update usuarios set dirty = %s where dni = %s', (False,dni))
-                                #conn2.commit()
+                                conn2.commit()
 
                             except Exception as e2:
                                 conn2.rollback()
