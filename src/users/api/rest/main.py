@@ -96,9 +96,6 @@ def usuario_por_dni(dni, token=None):
     if not token:
         return warden._invalid_token()
 
-    dni = request.args.get('dni', None)
-    assert dni is not None
-
     prof = warden.has_all_profiles(token, ['users-super-admin'])
     if not prof or not prof['profile']:
         return ('Insuficient access', 401)
