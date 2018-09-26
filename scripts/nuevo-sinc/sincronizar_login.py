@@ -57,22 +57,23 @@ if __name__ == '__main__':
         cur = con.cursor()
         try:
             for u in claves:
-                dni = u['dni']
-                clave = u['clave']
-                logging.info('{} - clave'.format(dni))
-                cur.execute('update user_password set password = %s, actualizado = NOW() where username = %s', (dni,clave))
-                if cur.rowcount <= 0:
-                    cid = str(uuid.uuid4())
-                    uid = u['uid']
-                    cur.execute('insert into user_password (id,user_id,username,password) values (%s,%s,%s,%s)',(cid, uid, dni, clave))
-                    logging.info('insertado : {} - clave'.format(dni))
-                con.commit()
-                u['actualizado'] = True
+                try:
+                    dni = u['dni']
+                    clave = u['clave']
+                    logging.info('{} - clave'.format(dni))
+                    cur.execute('update user_password set password = %s, actualizado = NOW() where username = %s', (dni,clave))
+                    if cur.rowcount <= 0:
+                        cid = str(uuid.uuid4())
+                        uid = u['uid']
+                        cur.execute('insert into user_password (id,user_id,username,password) values (%s,%s,%s,%s)',(cid, uid, dni, clave))
+                        logging.info('insertado : {} - clave'.format(dni))
+                    con.commit()
+                    u['actualizado'] = True
     
-        except Exception as e:
-            u['actualizado'] = False
-            con.rollback()
-            logging.exception(e)
+                except Exception as e:
+                    u['actualizado'] = False
+                    con.rollback()
+                    logging.exception(e)
 
         finally:
             cur.close()
