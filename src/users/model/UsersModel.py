@@ -143,29 +143,26 @@ class UsersModel:
         if 'nacimiento' in datos:
             usuario.nacimiento = datos['nacimiento']
         #TODO ---> Verificar alta de telefonos enviados y baja/reemplazo de telefonos del mismo tipo para el mismo usuario
-        '''
+        
         if 'telefonos' in datos:            
             for tel in datos['telefonos']:
-                if ('numero' and 'tipo') in tel:
-                    if tel['id'] is None:
-                        telNuevo = Telefono(numero=tel.numero)
-                        telNuevo.id = str(uuid.uuid4())
-                        telNuevo.tipo = tel.tipo
-                        telNuevo.usuario_id = uid
-                        session.add(telNuevo)
-                        -----------
-                        Como agrego uno nuevo debo marcar los telefonos anteriores del mismo tipo como eliminados
-                        -----------
-                    else:
-                        -----------
-                        Como es existente consulto si no fue eliminado, si no lo elimino
-                        -----------
-                        if tel.eliminado is not None:
+                if tel['id'] is None:
+                    telNuevo = Telefono(numero=tel['numero'])
+                    telNuevo.id = str(uuid.uuid4())
+                    telNuevo.tipo = tel['tipo']
+                    telNuevo.usuario_id = uid
+                    session.add(telNuevo)
+                    '''Como agrego uno nuevo debo marcar los telefonos anteriores del mismo tipo como eliminados
+                    telefonos = session.query(Telefono).filter(Telefono.usuario_id == uid, Telefono.tipo == tel['tipo'], Telefono.id != telNuevo.id, Telefono.eliminado is None).all()
+                    for t in telefonos:
+                        t.eliminado = datetime.datetime.now()
+                    '''                    
+                else:
+                    '''Como es existente consulto si no fue eliminado, si no lo elimino'''
+                    if tel['eliminado'] is not None:
+                        telefono = session.query(Telefono).filter(Telefono.id == tel['id']).one()
+                        telefono.eliminado = datetime.datetime.now()
 
-                        
-                        update(Telefono).where(usuario_id == uid and tipo == tel.tipo).values(eliminado = datetime.datetime.now()) 
-                        ------------
-        '''
 
     @classmethod
     def usuario_por_dni(cls, session, dni=None):
@@ -289,23 +286,11 @@ class UsersModel:
         correo = session.query(Mail).filter(Mail.id == cid).one()
         correo.eliminado = datetime.datetime.now()
 
+    '''metodo de eliminacion de telefono obsoleto, se deja por ahora pero ya no va a servir'''
     @classmethod
     def eliminar_telefono(cls, session, tid):
         telefono = session.query(Telefono).filter(Telefono.id == tid).one()
         telefono.eliminado = datetime.datetime.now()
-
-    '''
-    @classmethod
-    def agregar_telefono(cls, session, uid, telefono):
-        assert 'numero' in telefono
-        assert 'tipo' in telefono
-
-        tel = Telefono(numero=telefono.numero)
-        tel.tipo = telefono.tipo
-        tel.id = str(uuid.uuid4())
-        tel.usuario_id = uid
-    '''
-
 
     @classmethod
     def confirmar_correo(cls, session, cid, code):
