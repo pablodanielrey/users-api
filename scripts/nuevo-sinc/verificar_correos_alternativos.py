@@ -24,7 +24,7 @@ if __name__ == '__main__':
         cur = con.cursor()
         try:
             cur.execute('select id, dni, name, lastname from users where id not in (select user_id from mails where confirmado is not null and eliminado is null group by user_id)')
-            for u in cur.fetchall()
+            for u in cur.fetchall():
                 usuarios.append({
                         'id':u[0],
                         'dni':u[1],
