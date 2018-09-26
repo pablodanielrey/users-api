@@ -4,6 +4,7 @@ import psycopg2
 import sys
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
+import uuid
 
 if __name__ == '__main__':
 
@@ -24,12 +25,13 @@ if __name__ == '__main__':
 
         cur = conn.cursor()
         try:
-            cur.execute('select usuario, clave from usuario_clave where dirty = %s', (True,))
+            cur.execute('select usuario_id, usuario, clave from usuario_clave where dirty = %s', (True,))
             for l in cur.fetchall():
                 logging.info('agregando {} para sincronizar'.format(l[0]))
                 claves.append({
-                    'dni':l[0],
-                    'clave':l[1],
+                    'uid':l[0]
+                    'dni':l[1],
+                    'clave':l[2],
                     'actualizado':False
                 }) 
 
@@ -59,6 +61,11 @@ if __name__ == '__main__':
                 clave = u['clave']
                 logging.info('{} - clave'.format(dni))
                 cur.execute('update user_password set password = %s, actualizado = NOW() where username = %s', (dni,clave))
+                if cur.rowcount <= 0:
+                    cid = str(uuid.uuid4())
+                    uid = u['uid']
+                    cur.execute('insert into user_password (id,user_id,username,password) values (%s,%s,%s,%s)',(cid, uid, dni, clave))
+                    logging.info('insertado : {} - clave'.format(dni))
                 con.commit()
                 u['actualizado'] = True
     
