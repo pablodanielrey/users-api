@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     dni = sys.argv[1]
     nombre = sys.argv[2]
-    appelido = sys.argv[3]
+    apellido = sys.argv[3]
 
     h = os.environ['USERS_DB_HOST']
     pp = os.environ['USERS_DB_PORT']
