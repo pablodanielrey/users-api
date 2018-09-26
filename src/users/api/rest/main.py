@@ -254,7 +254,6 @@ def eliminar_correo(uid=None, cid=None, token=None):
         return {'id':cid}
 
 
-'''metodo de eliminacion de telefono obsoleto, se deja por ahora pero ya no va a servir'''
 @app.route(API_BASE + '/usuarios/<uid>/telefonos/<tid>', methods=['DELETE'])
 @app.route(API_BASE + '/telefonos/<tid>', methods=['DELETE'])
 @warden.require_valid_token

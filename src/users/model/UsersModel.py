@@ -145,24 +145,19 @@ class UsersModel:
         #TODO ---> Verificar alta de telefonos enviados y baja/reemplazo de telefonos del mismo tipo para el mismo usuario
         
         if 'telefonos' in datos:            
-            for tel in datos['telefonos']:
-                if tel['id'] is None:
-                    telNuevo = Telefono(numero=tel['numero'])
-                    telNuevo.id = str(uuid.uuid4())
-                    telNuevo.tipo = tel['tipo']
-                    telNuevo.usuario_id = uid
-                    session.add(telNuevo)
-                    '''Como agrego uno nuevo debo marcar los telefonos anteriores del mismo tipo como eliminados
-                    telefonos = session.query(Telefono).filter(Telefono.usuario_id == uid, Telefono.tipo == tel['tipo'], Telefono.id != telNuevo.id, Telefono.eliminado is None).all()
-                    for t in telefonos:
-                        t.eliminado = datetime.datetime.now()
-                    '''                    
-                else:
-                    '''Como es existente consulto si no fue eliminado, si no lo elimino'''
-                    if tel['eliminado'] == 'si':
-                        telefono = session.query(Telefono).filter(Telefono.id == tel['id'], Telefono.eliminado is None).one_or_none()
-                        if telefono:
-                            telefono.eliminado = datetime.datetime.now()
+            telefonos_a_agregar = [tel for tel in datos['telefonos'] if 'id' in tel and tel['id'] is None]
+            for tel in telefonos_a_agregar:
+                telNuevo = Telefono(numero=tel['numero'])
+                telNuevo.id = str(uuid.uuid4())
+                telNuevo.tipo = tel['tipo']
+                telNuevo.usuario_id = uid
+                session.add(telNuevo)
+
+            telefonos_a_eliminar = [tel for tel in datos['telefonos'] if 'eliminado' in tel and tel['eliminado'] is not None]
+            for tel in telefonos_a_eliminar:
+                telefono = session.query(Telefono).filter(Telefono.id == tel['id'], Telefono.eliminado == None).one_or_none()
+                if telefono:
+                    telefono.eliminado = datetime.datetime.now()
 
 
     @classmethod
