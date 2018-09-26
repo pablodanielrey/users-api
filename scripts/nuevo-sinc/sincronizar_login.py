@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
         cur = conn.cursor()
         try:
-            cur.execute('select usuario_id, usuario, clave from usuario_clave where dirty = %s', (True,))
+            cur.execute('select usuario_id, usuario, clave from usuario_clave where dirty = %s and eliminada is null', (True,))
             for l in cur.fetchall():
                 logging.info('agregando {} para sincronizar'.format(l[0]))
                 claves.append({
