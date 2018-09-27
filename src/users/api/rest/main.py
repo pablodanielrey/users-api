@@ -89,13 +89,9 @@ def obtener_avatar_binario_por_usuario(uid, token=None):
     return obtener_avatar_binario(h)
 
 @app.route(API_BASE + '/usuario_por_dni/<dni>', methods=['GET'])
-#@warden.require_valid_token
+@warden.require_valid_token
 @jsonapi
 def usuario_por_dni(dni, token=None):
-    token = warden._require_valid_token()
-    if not token:
-        return warden._invalid_token()
-
     prof = warden.has_all_profiles(token, ['users-super-admin'])
     if not prof or not prof['profile']:
         return ('Insuficient access', 401)
@@ -106,13 +102,16 @@ def usuario_por_dni(dni, token=None):
 
 @app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
 @app.route(API_BASE + '/usuarios/<uid>', methods=['GET'])
-#@warden.require_valid_token
+@warden.require_valid_token
 @jsonapi
 def usuarios(uid, token=None):
 
+    """
+    para poder frenar el debugger
     token = warden._require_valid_token()
     if not token:
         return warden._invalid_token()
+    """
 
     search = request.args.get('q', None)
     offset = request.args.get('offset',None,int)
@@ -312,6 +311,39 @@ def chequear_disponibilidad_cuenta(cuenta, token=None):
             return {'existe':True, 'correo': correo}
         else:
             return {'existe':False, 'correo':None}
+
+
+"""
+    ////////////////////////////////////////////////////////////////
+    //////////////////////// PRECONDICIONES ////////////////////////
+    ////////////////////////////////////////////////////////////////
+"""
+
+@app.route(API_BASE + '/precondiciones', methods=['GET'])
+@warden.require_valid_token
+@jsonapi
+def chequear_precondiciones_usuario(token=None):
+    uid = token['sub']
+    assert uid is not None
+    with obtener_session() as s:
+        return UsersModel.precondiciones(s,uid)
+
+@app.route(API_BASE + '/usuarios/<uid>/precondiciones', methods=['GET'])
+@warden.require_valid_token
+@jsonapi
+def chequear_precondiciones_de_usuario(uid, token=None):
+    assert uid is not None
+    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
+    if not prof['profile']:
+        return ('no tiene los permisos suficientes', 403)
+
+    with obtener_session() as s:
+        return UsersModel.precondiciones(s,uid)
+
+
+
+
+
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET','POST','PUT','PATCH'])

@@ -17,6 +17,7 @@ class UsersModel:
 
     VERIFY_SSL = bool(int(os.environ.get('VERIFY_SSL', 1)))
     FILES_API_URL = os.environ['FILES_API_URL']
+    INTERNAL_DOMAINS = os.environ['INTERNAL_DOMAINS'].split(',')
 
     @staticmethod
     def _aplicar_filtros_comunes(q, offset, limit):
@@ -310,22 +311,11 @@ class UsersModel:
         cuerpo = tmpl.render(nombre=nombre, codigo=codigo)
         MailsModel.enviar_correo('sistemas@econo.unlp.edu.ar', mail, 'Confirmación de cuenta alternativa de contacto FCE', cuerpo)
 
-
-    """
-    @staticmethod
-    def obtener_template(nombre, codigo):
-        with open('users/model/templates/confirmar_correo.html','r') as f:
-            template = f.read()
-            texto = template.replace('$USUARIO',nombre)\
-                    .replace('$CODIGO_CONFIRMACION',codigo)\
-                    .replace('$URL_DE_INFORME','http://incidentes.econo.unlp.edu.ar/0293094-df2323-r4354-f34543')
-            return texto
-
-    @staticmethod
-    def enviar_correo(de, para, asunto, cuerpo):
-        ''' https://developers.google.com/gmail/api/guides/sending '''
-        bcuerpo = base64.urlsafe_b64encode(cuerpo.encode('utf-8')).decode()
-        r = requests.post('http://163.10.56.57:8001/emails/api/v1.0/enviar_correo', json={'de':de, 'para':para, 'asunto':asunto, 'cuerpo':bcuerpo})
-        print(str(r))
-    """
-
+    @classmethod
+    def precondiciones(cls, session, uid):
+        """ por ahora solo chequeo que tenga correo alternativo confirmado """
+        correos = session.query(Mail).filter(Mail.usuario_id == uid, Mail.eliminado == None, Mail.confirmado != None).all()
+        alternativos = [m for m in correos if m.email.split('@')[1] not in cls.INTERNAL_DOMAINS]
+        return {
+            'correo': len(alternativos) >= 1
+        }
