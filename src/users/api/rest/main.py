@@ -172,6 +172,15 @@ def actualizar_usuario(uid, token=None):
         UsersModel.actualizar_usuario(session, uid, datos)
         session.commit()
 
+@app.route(API_BASE + '/usuarios/<uid>/sincronizar', methods=['GET'])
+#@warden.require_valid_token
+@jsonapi
+def sincronizar_usuario(uid, token=None):
+
+    with obtener_session() as session:
+        UsersModel.actualizar_usuario(session, uid, datos)
+        session.commit()        
+
 @app.route(API_BASE + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
 @app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
 @app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['GET'])
