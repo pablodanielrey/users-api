@@ -105,7 +105,7 @@ if __name__ == '__main__':
                     if u['actualizado']:
                         dni = u['dni']
                         logging.info('{} - dirty = False'.format(dni))
-                        cur.execute('update usuario_clave set dirty = %s where usuario = %s', (False,dni))
+                        cur.execute('update from usuario_clave set dirty = %s where usuario = %s', (False,dni))
                         conn.commit()
                 except Exception as e:
                     logging.exception(e)
