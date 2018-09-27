@@ -3,14 +3,32 @@ from .GoogleAuthApi import GoogleAuthApi
 
 class GoogleModel:
 
+    def __init__(self, dominio_primario):
+        self.dominio_primario = dominio_primario
+        self.service = GAuthApis.getServiceAdmin()
+
+    def actualizar_correos(self, correos=[]):
+        cs = [c.email for c in correos]
+
+
     @classmethod
-    def sincronizar(cls, uid):
-        userGoogle = s.dni + '@econo.unlp.edu.ar'
-        service = GAuthApis.getServiceAdmin()
+    def actualizar_usuario(cls, usuario):
+        userGoogle = '{}@{}'.format(dni,self.dominio_primario)
+        datos = {
+            'familyName': usuario.apellido, 
+            'givenName': usuario.nombre, 
+            'fullName': '{} {}'.format(usuario.nombre, usuario.apellido)
+        }
         r = service.users().update(userKey=userGoogle,body=datos).execute()
+
+
 
         r = service.users().aliases().list(userKey=userGoogle).execute()
         aliases = [a['alias'] for a in r.get('aliases', [])]
+
+        
+        aliases_faltantes = []
+
         for e in s.emails.split(","):
             if e not in aliases:
                 logging.debug('creando alias')
