@@ -282,6 +282,7 @@ class UsersModel:
     def eliminar_correo(cls, session, cid):
         correo = session.query(Mail).filter(Mail.id == cid).one()
         correo.eliminado = datetime.datetime.now()
+        correo.usuario.dirty = True
 
     '''metodo de eliminacion de telefono obsoleto, se deja por ahora pero ya no va a servir'''
     @classmethod
