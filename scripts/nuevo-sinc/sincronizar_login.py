@@ -61,12 +61,16 @@ if __name__ == '__main__':
                     dni = u['dni']
                     clave = u['clave']
                     logging.info('{} - clave'.format(dni))
+                    cur.execute('delete user_password where username = %s', (dni,))
+                    """
                     cur.execute('update user_password set password = %s, actualizado = NOW() where username = %s', (clave, dni))
                     if cur.rowcount <= 0:
-                        cid = str(uuid.uuid4())
-                        uid = u['uid']
-                        cur.execute('insert into user_password (id, user_id, username, password) values (%s,%s,%s,%s)',(cid, uid, dni, clave))
-                        logging.info('insertado : {} - clave'.format(dni))
+                    """
+                    cid = str(uuid.uuid4())
+                    uid = u['uid']
+                    cur.execute('insert into user_password (id, user_id, username, password) values (%s,%s,%s,%s)',(cid, uid, dni, clave))
+                    logging.info('insertado : {} - clave'.format(dni))
+                
                     con.commit()
                     u['actualizado'] = True
     
