@@ -1,7 +1,8 @@
 import os
 import datetime
+import uuid
 
-from users.model.entities import Usuario, Mail
+from users.model.entities import Usuario, Mail, ErrorGoogle
 from .GoogleAuthApi import GAuthApis
 
 
@@ -12,7 +13,12 @@ class GoogleModel:
     service = GAuthApis.getServiceAdmin(admin)
 
     @classmethod
-    def actualizar_correos_hacia_google(cls, usuario):
+    def actualizar_correos_hacia_google(cls, session, usuario):
+
+        errores = session.query(ErrorGoogle).filter(ErrorGoogle.usuario_id == usuario.id).count()
+        if errores > 5:
+            return []
+
         cs = [c.email for c in usuario.mails if c.confirmado and not c.eliminado and cls.dominio_primario in c.email]
         if len(cs) <= 0:
             return []
@@ -27,11 +33,12 @@ class GoogleModel:
                 r = cls.service.users().aliases().insert(userKey=username, body={"alias":e}).execute()
                 respuestas.append(r)
             except Exception as e:
-                r = {
-                    'error': e.resp.status,
-                    'response': e.resp.reason
-                }
-                respuestas.append(r)
+                er = ErrorGoogle()
+                er.usuario_id = usuario.id
+                er.error = e.resp.status
+                er.descripcion = e.resp.reason
+                session.add(er)
+                respuestas.append(er)
         return respuestas
 
     @classmethod
@@ -62,10 +69,66 @@ class GoogleModel:
     def sincronizar(cls, session, uid):
         assert uid is not None
         u = session.query(Usuario).filter(Usuario.id == uid).one()
-        r = cls.actualizar_correos_desde_google(session,u)
-        session.commit()
-        r2 = cls.actualizar_correos_hacia_google(u)
 
+        r1 = cls.actualizar_o_crear_usuario_en_google(session, u)
+
+        r2 = cls.actualizar_correos_desde_google(session,u)
+        session.commit()
+
+        r3 = cls.actualizar_correos_hacia_google(session,u)
+        session.commit()
+        return [r1] + r2 + r3
+
+
+
+    @classmethod
+    def actualizar_o_crear_usuario_en_google(cls, session, usuario):
+        usuario_google = '{}@{}'.format(usuario.dni, cls.dominio_primario)
+
+        u = None
+        r = None
+        try:
+            u = cls.service.users().get(userKey=usuario_google).execute()
+        except Exception as e:
+            ''' el usuario no existe '''
+            pass
+
+        if u is not None:
+            datos = {
+                'familyName': usuario.apellido, 
+                'givenName': usuario.nombre, 
+                'fullName': '{} {}'.format(usuario.nombre, usuario.apellido)
+            }
+            r = service.users().update(userKey=usuario_google,body=datos).execute()
+
+        else:
+            ''' todas las direcciones que sean del dominio primario '''
+            aliases = [
+                m.email for m in usuario.mails 
+                if m.confirmado and 
+                    m.eliminado is None and 
+                    m.email.split('@')[1] in cls.dominio_primario
+            ]
+
+            datos = {}
+            datos["aliases"] = aliases
+            datos["changePasswordAtNextLogin"] = False
+            datos["primaryEmail"] = usuario_google
+            datos["emails"] = [{'address': usuario_google, 'primary': True, 'type': 'work'}]
+            for a in aliases:
+                datos['emails'].append({'address': a, 'primary': False, 'type': 'work'})
+
+            datos["name"] = {
+                "givenName": usuario.nombre, 
+                "familyName": usuario.apellido,
+                "fullName": '{} {}'.format(usuario.nombre, usuario.apellido)
+            }
+            datos["password"] = str(uuid.uuid4()).replace('-','')
+            datos["externalIds"] = [{'type': 'custom', 'value': usuario.id}]
+
+            r = cls.service.users().insert(body=datos).execute()
+
+        return r
 
 
     """
