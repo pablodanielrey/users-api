@@ -39,7 +39,9 @@ setup(name='users',
                             'gunicorn',
                             'microservices_common',
                             'warden-api',
-                            'ptvsd'],
+                            'ptvsd',
+                            'google-api-python-client',
+                            'oauth2client'],
           entry_points={
             'console_scripts': [
                 'rest=users.api.rest.main:main'

@@ -17,8 +17,6 @@ import httplib2
 
 class GAuthApis:
 
-    adminGoogle = os.environ['ADMIN_USER_GOOGLE']
-
     SCOPES = 'https://www.googleapis.com/auth/admin.directory.user'
 
     SCOPESGMAIL = [
@@ -48,18 +46,18 @@ class GAuthApis:
         return admin_credentials
 
     @classmethod
-    def getService(cls, version, api, scopes, username=adminGoogle):
+    def getService(cls, version, api, scopes, username):
         credentials = cls.getCredentials(username, scopes)
         http = credentials.authorize(httplib2.Http())
         service = discovery.build(api, version, http=http, cache_discovery=False)
         return service
 
     @classmethod
-    def getServiceAdmin(cls, username=adminGoogle, version='directory_v1'):
+    def getServiceAdmin(cls, username, version='directory_v1'):
         api='admin'
         return cls.getService(version, api, cls.SCOPES, username)
 
     @classmethod
-    def getServiceGmail(cls, username=adminGoogle, version='v1'):
+    def getServiceGmail(cls, username, version='v1'):
         api='gmail'
         return cls.getService(version, api, cls.SCOPESGMAIL, username)

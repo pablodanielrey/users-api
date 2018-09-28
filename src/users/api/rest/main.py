@@ -172,14 +172,10 @@ def actualizar_usuario(uid, token=None):
         UsersModel.actualizar_usuario(session, uid, datos)
         session.commit()
 
-@app.route(API_BASE + '/usuarios/<uid>/sincronizar', methods=['GET'])
-#@warden.require_valid_token
-@jsonapi
-def sincronizar_usuario(uid, token=None):
 
-    with obtener_session() as session:
-        UsersModel.actualizar_usuario(session, uid, datos)
-        session.commit()        
+
+
+
 
 @app.route(API_BASE + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
 @app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
@@ -198,7 +194,7 @@ def correos_de_usuario(uid, cid, token=None):
     with obtener_session() as session:
         return UsersModel.correos(session=session, usuario=uid, historico=h, offset=offset, limit=limit)
 
-@app.route(API_BASE + '/usuarios/<uid>/correo', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>/correo_institucional', methods=['PUT','POST'])
 @warden.require_valid_token
 @jsonapi
 def agregar_correo_institucional(uid, token=None):
@@ -209,14 +205,14 @@ def agregar_correo_institucional(uid, token=None):
 
     assert uid != None
     datos = json.loads(request.data)
-    assert datos['correo'] != None
+    assert datos['email'] != None
     with obtener_session() as session:
         if not UsersModel.existe(session=session, usuario=uid):
             raise Exception('Usuario no existente')
 
-        mail = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=datos['correo'])
+        mail = UsersModel.obtener_correo_por_cuenta(session=session, cuenta=datos['email'])
         if not mail:
-            mail = UsersModel.agregar_correo_institucional(session=session, uid=uid, datos={'email':datos['correo']})
+            mail = UsersModel.agregar_correo_institucional(session=session, uid=uid, datos=datos)
             session.commit()
         else:
             mail.confirmado = datetime.datetime.now()
@@ -320,6 +316,26 @@ def chequear_disponibilidad_cuenta(cuenta, token=None):
             return {'existe':True, 'correo': correo}
         else:
             return {'existe':False, 'correo':None}
+
+
+"""
+    //////////////////////////////////////////////////////////
+    ///////////////////// SINC GOOGLE ////////////////////////
+    //////////////////////////////////////////////////////////
+"""
+
+from users.model.google.GoogleModel import GoogleModel
+
+@app.route(API_BASE + '/usuarios/<uid>/sincronizar_google', methods=['GET'])
+#@warden.require_valid_token
+@jsonapi
+def sincronizar_usuario(uid, token=None):
+
+    with obtener_session() as session:
+        r = GoogleModel.sincronizar(session, uid)
+        return r
+
+
 
 
 """

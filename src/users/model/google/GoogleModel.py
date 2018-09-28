@@ -1,25 +1,74 @@
-from .GoogleAuthApi import GoogleAuthApi
+import os
+import datetime
+
+from users.model.entities import Usuario, Mail
+from .GoogleAuthApi import GAuthApis
 
 
 class GoogleModel:
 
-    def __init__(self, dominio_primario):
-        self.dominio_primario = dominio_primario
-        self.service = GAuthApis.getServiceAdmin()
+    dominio_primario = os.environ.get('INTERNAL_DOMAINS').split(',')[0]
+    admin = os.environ.get('ADMIN_USER_GOOGLE')
+    service = GAuthApis.getServiceAdmin(admin)
 
-    def actualizar_correos(self, correos=[]):
-        cs = [c.email for c in correos]
+    @classmethod
+    def actualizar_correos_hacia_google(cls, usuario):
+        cs = [c.email for c in usuario.mails if c.confirmado and not c.eliminado and cls.dominio_primario in c.email]
         if len(cs) <= 0:
-            return
+            return []
 
-        r = self.service.users().aliases().list(userKey=userGoogle).execute()
+        username = '{}@{}'.format(usuario.dni,cls.dominio_primario)
+        r = cls.service.users().aliases().list(userKey=username).execute()
         aliases = [a['alias'] for a in r.get('aliases', [])]
-        aliases_faltantes = [c for c in cs if c not in aliases]
-        [{
-            'estado':r.status,
-            
-        }]
-        r = service.users().aliases().insert(userKey=userGoogle,body={"alias":e}).execute()
+        aliases_faltantes = [c.strip().lower() for c in cs if c not in aliases]
+        respuestas = []
+        for e in aliases_faltantes:
+            try: 
+                r = cls.service.users().aliases().insert(userKey=username, body={"alias":e}).execute()
+                respuestas.append(r)
+            except Exception as e:
+                r = {
+                    'error': e.resp.status,
+                    'response': e.resp.reason
+                }
+                respuestas.append(r)
+        return respuestas
+
+    @classmethod
+    def actualizar_correos_desde_google(cls, session, usuario):
+
+        username = '{}@{}'.format(usuario.dni,cls.dominio_primario)
+        r = cls.service.users().aliases().list(userKey=username).execute()
+        aliases = [a['alias'] for a in r.get('aliases', [])]
+
+        if len(aliases) <= 0:
+            return []
+
+        ret = []
+        cs = [c.email for c in usuario.mails if c.confirmado and not c.eliminado and cls.dominio_primario in c.email]
+        correos_a_agregar = [a for a in aliases if a not in cs]
+        for c in correos_a_agregar:
+            m = Mail()
+            m.confirmado = datetime.datetime.now()
+            m.email = c
+            m.usuario_id = usuario.id
+            session.add(m)
+            usuario.mails.append(m)
+            ret.append({ 'correo': c, 'agregado': True})
+        return ret
+
+
+    @classmethod
+    def sincronizar(cls, session, uid):
+        assert uid is not None
+        u = session.query(Usuario).filter(Usuario.id == uid).one()
+        r = cls.actualizar_correos_desde_google(session,u)
+        session.commit()
+        r2 = cls.actualizar_correos_hacia_google(u)
+
+
+
+    """
 
     @classmethod
     def actualizar_usuario(cls, usuario):
@@ -89,3 +138,5 @@ class GoogleModel:
             ds = cls._crearLog(r)
             session.add(ds)
             session.commit()
+
+    """
