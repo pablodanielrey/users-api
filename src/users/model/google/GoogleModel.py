@@ -9,7 +9,17 @@ class GoogleModel:
 
     def actualizar_correos(self, correos=[]):
         cs = [c.email for c in correos]
+        if len(cs) <= 0:
+            return
 
+        r = self.service.users().aliases().list(userKey=userGoogle).execute()
+        aliases = [a['alias'] for a in r.get('aliases', [])]
+        aliases_faltantes = [c for c in cs if c not in aliases]
+        [{
+            'estado':r.status,
+            
+        }]
+        r = service.users().aliases().insert(userKey=userGoogle,body={"alias":e}).execute()
 
     @classmethod
     def actualizar_usuario(cls, usuario):
@@ -21,10 +31,8 @@ class GoogleModel:
         }
         r = service.users().update(userKey=userGoogle,body=datos).execute()
 
+        r = service.users().aliases().insert(userKey=userGoogle,body={"alias":e}).execute()
 
-
-        r = service.users().aliases().list(userKey=userGoogle).execute()
-        aliases = [a['alias'] for a in r.get('aliases', [])]
 
         
         aliases_faltantes = []
