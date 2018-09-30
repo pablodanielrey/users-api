@@ -55,7 +55,7 @@ class GoogleModel:
             pass
 
         if u is not None:
-            if u['name']['givenName'] != usuario.nombre or u['name']['lastName'] != usuario.apellido:
+            if u['name']['givenName'] != usuario.nombre or u['name']['familyName'] != usuario.apellido:
                 datos = {
                     'familyName': usuario.apellido, 
                     'givenName': usuario.nombre, 
