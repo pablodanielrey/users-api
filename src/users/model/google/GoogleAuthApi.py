@@ -61,3 +61,4 @@ class GAuthApis:
     def getServiceGmail(cls, username, version='v1'):
         api='gmail'
         return cls.getService(version, api, cls.SCOPESGMAIL, username)
+

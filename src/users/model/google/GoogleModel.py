@@ -17,7 +17,9 @@ class GoogleModel:
     dominio_primario = os.environ.get('INTERNAL_DOMAINS').split(',')[0]
     admin = os.environ.get('ADMIN_USER_GOOGLE')
     errores_maximos = 5
-    service = GAuthApis.getServiceAdmin(admin)
+
+    if bool(os.environ.get('GOOGLE_SYNC',0)):
+        service = GAuthApis.getServiceAdmin(admin)
 
     @classmethod
     def _chequear_errores(cls, uid):

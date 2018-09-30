@@ -11,9 +11,6 @@
 		},
 		{
 			"path": "/src/github/warden-api"
-		},
-		{
-			"path": "/src/github/google-api"
 		}
 	]
 }
