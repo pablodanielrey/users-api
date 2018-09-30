@@ -121,7 +121,7 @@ class GoogleModel:
             return []
 
         ret = []
-        cs = cls._obtener_alias_para_google(usuario)
+        cs = [c.email for c in usuario.mails if c.confirmado and not c.eliminado]
         correos_a_agregar = [a for a in aliases if a not in cs]
         for c in correos_a_agregar:
             m = Mail()
