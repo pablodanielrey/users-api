@@ -107,7 +107,7 @@ def usuario_por_dni(dni, token=None):
 def usuarios(uid, token=None):
 
     """
-    para poder frenar el debugger
+    para poder debuggear el require valid token.
     token = warden._require_valid_token()
     if not token:
         return warden._invalid_token()
@@ -117,11 +117,9 @@ def usuarios(uid, token=None):
     offset = request.args.get('offset',None,int)
     limit = request.args.get('limit',None,int)
 
-    mostrarClave = False
     admin = False
     prof = warden.has_all_profiles(token, ['users-super-admin'])
     if prof and prof['profile']:
-        mostrarClave = request.args.get('c',False,bool)
         admin = True
     else:
         prof = warden.has_all_profiles(token, ['users-admin'])
@@ -135,12 +133,11 @@ def usuarios(uid, token=None):
 
     with obtener_session() as session:
         if uid:
-            us = UsersModel.usuario(session=session, uid=uid, retornarClave=mostrarClave)
+            us = UsersModel.usuario(session=session, uid=uid)
             return us
         else:
-            fecha_str = request.args.get('f', None)
-            fecha = parser.parse(fecha_str) if fecha_str else None
-            return UsersModel.usuarios(session=session, search=search, retornarClave=mostrarClave, offset=offset, limit=limit, fecha=fecha)
+            us = UsersModel.usuarios(session=session, search=search, offset=offset, limit=limit)
+            return us
 
 @app.route(API_BASE + '/usuarios', methods=['PUT'])
 @warden.require_valid_token
@@ -171,10 +168,7 @@ def actualizar_usuario(uid, token=None):
     with obtener_session() as session:
         UsersModel.actualizar_usuario(session, uid, datos)
         session.commit()
-
-
-
-
+        return uid
 
 
 @app.route(API_BASE + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})

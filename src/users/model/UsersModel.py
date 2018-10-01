@@ -19,12 +19,15 @@ class UsersModel:
     FILES_API_URL = os.environ['FILES_API_URL']
     INTERNAL_DOMAINS = os.environ['INTERNAL_DOMAINS'].split(',')
 
+    @classmethod
+    def _es_dominio_interno(cls, mail):
+        return mail.split('@')[1] in cls.INTERNAL_DOMAINS
+
     @staticmethod
     def _aplicar_filtros_comunes(q, offset, limit):
         q = q.offset(offset) if offset else q
         q = q.limit(limit) if limit else q
         return q
-
 
     @classmethod
     def obtener_avatar(cls, hash):
@@ -71,6 +74,7 @@ class UsersModel:
         u.nombre = usuario['nombre']
         u.apellido = usuario['apellido']
         u.dni = dni
+        u.dirty = True
 
         if 'legajo' in usuario:
             legajo = usuario['legajo']
@@ -129,8 +133,11 @@ class UsersModel:
         apellido = g2.group()
 
         usuario = session.query(Usuario).filter(Usuario.id == uid).one()
+        usuario.dirty = True
         usuario.nombre = nombre
         usuario.apellido = apellido
+        usuario.actualizado = datetime.datetime.now()
+
         if 'legajo' in datos:
             usuario.legajo = datos['legajo']
         if 'genero' in datos:
@@ -170,7 +177,7 @@ class UsersModel:
         return u
 
     @classmethod
-    def usuario(cls, session, uid=None, dni=None, retornarClave=False):
+    def usuario(cls, session, uid=None, dni=None):
         q = session.query(Usuario)
         if uid:
             q = q.filter(Usuario.id == uid)
@@ -181,19 +188,6 @@ class UsersModel:
         q = q.options(joinedload('mails'), joinedload('telefonos'))
         #q = q.filter(Telefono.eliminado == None)
         return q.one()
-
-    @classmethod
-    def encontrarUsuariosModificadosDesde(cls, session, fecha, offset=None, limit=None):
-        q = session.query(Usuario)
-        q1 = q.filter(or_(Usuario.actualizado >= fecha, Usuario.creado >= fecha))
-        q4 = session.query(Mail.usuario_id).filter(or_(Mail.actualizado >= fecha, Mail.creado >= fecha, Mail.eliminado >= fecha))
-        q5 = session.query(Usuario).filter(Usuario.id.in_(q4))
-
-        q = q.union(q1).union(q5)
-
-        q = q.options(joinedload('telefonos'), joinedload('mails'))
-        q = cls._aplicar_filtros_comunes(q, offset, limit)
-        return q.all()
 
     @classmethod
     def encontrarUsuariosPorSearch(cls, session, search, retornarClave=False, offset=None, limit=None):
@@ -212,13 +206,9 @@ class UsersModel:
         return q.all()
 
     @classmethod
-    def usuarios(cls, session, search=None, retornarClave=False, offset=None, limit=None, fecha=None):
-        if fecha:
-            return cls.encontrarUsuariosModificadosDesde(session, fecha, offset=offset, limit=limit)
-        if search:
-            return cls.encontrarUsuariosPorSearch(session, search, retornarClave=retornarClave, offset=offset, limit=limit)
-        return []
-
+    def usuarios(cls, session, search=None, offset=None, limit=None):
+        assert search != None
+        return cls.encontrarUsuariosPorSearch(session, search, retornarClave=retornarClave, offset=offset, limit=limit)
 
     @classmethod
     def existe(cls, session, usuario):
@@ -240,25 +230,37 @@ class UsersModel:
         q = session.query(Mail).filter(Mail.email == cuenta, Mail.eliminado == None)
         return q.one_or_none()
 
-
     @classmethod
     def agregar_correo_institucional(cls, session, uid, datos):
         assert 'email' in datos
         assert len(datos['email'].strip()) > 0
 
-        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == datos['email'], Mail.eliminado == None).order_by(Mail.creado.desc()).all()
+        email = datos['email'].lower().replace(' ','')
+
+        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == email, Mail.eliminado == None).order_by(Mail.creado.desc()).all()
         for m in mails:
             ''' ya existe, no lo agrego pero no tiro error '''
             if not m.confirmado:
                 m.confirmado = datetime.datetime.now()
             return m.id
 
+        if not cls._es_dominio_interno(email):
+            raise Exception(f"{email} no pertenece a alguno de los dominios internos")
+
         mail = Mail()
         mail.id = str(uuid.uuid4())
         mail.usuario_id = uid
         mail.confirmado = datetime.datetime.now()
-        mail.email = datos['email'].lower()
+        mail.email = email
         session.add(mail)
+
+        ''' para la sincronizacion '''
+        usuario = session.query(Usuario).filter(Usuario.id == uid).one()
+        usuario.actualizado = datetime.datetime.now()
+        usuario.dirty = True
+        usuario.google = True
+        usuario.mails.append(mail)
+
         return mail
 
 
@@ -267,28 +269,43 @@ class UsersModel:
         assert 'email' in datos
         assert len(datos['email'].strip()) > 0
 
-        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == datos['email'], Mail.eliminado == None).order_by(Mail.creado.desc()).all()
+        email = datos['email'].lower().replace(' ','')
+
+        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == email, Mail.eliminado == None).order_by(Mail.creado.desc()).all()
         for m in mails:
             ''' ya existe, no lo agrego pero no tiro error '''
             return m.id
         usuario = session.query(Usuario).filter(Usuario.id == uid).one()
-        mail = Mail(email=datos['email'].lower())
+        mail = Mail(email=email)
         mail.id = str(uuid.uuid4())
-        usuario.mails.append(mail)
         session.add(mail)
+        
+        usuario.mails.append(mail)
+        usuario.actualizado = datetime.datetime.now()        
+        usuario.dirty = True
+
         return mail.id
 
     @classmethod
     def eliminar_correo(cls, session, cid):
         correo = session.query(Mail).filter(Mail.id == cid).one()
         correo.eliminado = datetime.datetime.now()
-        correo.usuario.dirty = True
 
-    '''metodo de eliminacion de telefono obsoleto, se deja por ahora pero ya no va a servir'''
+        usuario = correo.usuario
+        usuario.actualizado = datetime.datetime.now()        
+        usuario.dirty = True
+        if cls._es_dominio_interno(correo.email):
+            usuario.google = True
+
     @classmethod
     def eliminar_telefono(cls, session, tid):
         telefono = session.query(Telefono).filter(Telefono.id == tid).one()
         telefono.eliminado = datetime.datetime.now()
+
+        usuario = telefono.usuario
+        usuario.dirty = True
+        usuario.actualizado = datetime.datetime.now()
+        
 
     @classmethod
     def confirmar_correo(cls, session, cid, code):
@@ -296,8 +313,12 @@ class UsersModel:
         if not correo:
             raise CorreoNoEncontradoError()
         correo.confirmado = datetime.datetime.now()
-        correo.usuario.dirty = True
-        correo.usuario.google = True
+        usuario = correo.usuario
+
+        usuario.actualizado = datetime.datetime.now()
+        usuario.dirty = True
+        if cls._es_dominio_interno(correo.email):
+            usuario.google = True
 
     @classmethod
     def enviar_confirmar_correo(cls, session, cid):
@@ -305,7 +326,7 @@ class UsersModel:
         if not correo.hash:
             correo.hash=str(uuid.uuid4())[:5]
 
-        mail = correo.email.lower().strip()
+        mail = correo.email
         codigo = correo.hash
         nombre = correo.usuario.nombre + ' ' + correo.usuario.apellido
         tmpl = cuerpo = MailsModel.obtener_template('confirmar_correo.tmpl')

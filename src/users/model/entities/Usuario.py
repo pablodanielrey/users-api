@@ -17,19 +17,14 @@ class Usuario(Base):
     pais = Column(String)
     direccion = Column(String)
     tipo = Column(String)
-    google = Column(Boolean)
-    dirty = Column(Boolean)
+
     avatar = Column(String)
     legajo = Column(String, unique=True)
 
+    eliminado = Column(DateTime)
+
+    google = Column(Boolean)
+    dirty = Column(Boolean)
+
     mails = relationship('Mail', back_populates='usuario')
     telefonos = relationship('Telefono', back_populates='usuario')
-
-    def mails_alternativos(self, dominio):
-        for m in self.mails:
-            if m.eliminado:
-                continue
-            if m.confirmado and dominio not in m.email:
-                return m
-        return None
-
