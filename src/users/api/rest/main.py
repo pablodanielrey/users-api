@@ -228,9 +228,19 @@ def agregar_correo_institucional(uid, token=None):
 @jsonapi
 def agregar_correo(uid, token=None):
 
-    prof = warden.has_one_profile(token, ['users-super-admin', 'users-admin'])
-    if not prof['profile']:
-        return ('no tiene los permisos suficientes', 403)
+    admin = False
+    prof = warden.has_all_profiles(token, ['users-super-admin'])
+    if prof and prof['profile']:
+        admin = True
+    else:
+        prof = warden.has_all_profiles(token, ['users-admin'])
+        if prof:
+            admin = prof['profile']
+
+    if not admin:
+        auid = token['sub']
+        if auid != uid:
+            return ('no tiene los permisos suficientes', 403)
 
     assert uid != None
     datos = json.loads(request.data)
