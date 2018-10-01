@@ -190,7 +190,7 @@ class UsersModel:
         return q.one()
 
     @classmethod
-    def encontrarUsuariosPorSearch(cls, session, search, retornarClave=False, offset=None, limit=None):
+    def encontrarUsuariosPorSearch(cls, session, search, offset=None, limit=None):
         q = session.query(Usuario)
         q = q.filter(or_(\
             Usuario.dni.op('~*')(search),\
@@ -208,7 +208,7 @@ class UsersModel:
     @classmethod
     def usuarios(cls, session, search=None, offset=None, limit=None):
         assert search != None
-        return cls.encontrarUsuariosPorSearch(session, search, retornarClave=retornarClave, offset=offset, limit=limit)
+        return cls.encontrarUsuariosPorSearch(session, search, offset=offset, limit=limit)
 
     @classmethod
     def existe(cls, session, usuario):
