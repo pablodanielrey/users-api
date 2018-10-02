@@ -154,6 +154,7 @@ class GoogleModel:
     def sincronizar_dirty(cls, session):
         ''' sincroniza todos los usuarios que esten marcados para google '''
         usuarios = session.query(Usuario).filter(Usuario.google == True).all()
+        sincronizados = []
         for u in usuarios:
             try:
                 if cls._chequear_errores(usuario.id):
@@ -161,8 +162,17 @@ class GoogleModel:
                 cls._sincronizar(session, u)
                 u.google = False
                 session.commit()
+                sincronizados.append({
+                    'id': u.id,
+                    'dni': u.dni
+                })
             except Exception as e:
                 logging.exception(e)
+
+        return {
+            'usuarios': sincronizados,
+            'sincronizados': len(sincronizados)
+        }
 
 
 
