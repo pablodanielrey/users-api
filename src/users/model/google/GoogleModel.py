@@ -142,13 +142,13 @@ class GoogleModel:
 
         r3 = cls.actualizar_correos_hacia_google(session,u)
         session.commit()
-        return [r1] + r2 + r3
+        return {'sincronizacion_usuario': [r1] + r2 + r3 }
 
     @classmethod
     def sincronizar(cls, session, uid):
         assert uid is not None
         u = session.query(Usuario).filter(Usuario.id == uid).one()
-        cls._sincronizar(session, u)
+        return cls._sincronizar(session, u)
 
     @classmethod
     def sincronizar_dirty(cls, session):
@@ -159,13 +159,10 @@ class GoogleModel:
             try:
                 if cls._chequear_errores(usuario.id):
                     continue
-                cls._sincronizar(session, u)
+                ru = cls._sincronizar(session, u)
                 u.google = False
                 session.commit()
-                sincronizados.append({
-                    'id': u.id,
-                    'dni': u.dni
-                })
+                sincronizados.append(ru)
             except Exception as e:
                 logging.exception(e)
 
