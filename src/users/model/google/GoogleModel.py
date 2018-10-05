@@ -104,13 +104,14 @@ class GoogleModel:
                 r = cls.service.users().aliases().insert(userKey=username, body={"alias":e}).execute()
                 respuestas.append(r)
 
-            except Exception as e:
+            except Exception as e1:
                 er = ErrorGoogle()
                 er.usuario_id = usuario.id
                 er.error = e.resp.status
                 er.descripcion = e.resp.reason
                 session.add(er)
                 respuestas.append(er)
+
         return respuestas
 
     @classmethod
