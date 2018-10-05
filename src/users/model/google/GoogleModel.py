@@ -107,8 +107,8 @@ class GoogleModel:
             except Exception as e1:
                 er = ErrorGoogle()
                 er.usuario_id = usuario.id
-                er.error = e.resp.status
-                er.descripcion = e.resp.reason
+                er.error = e1.resp.status
+                er.descripcion = e1.resp.reason
                 session.add(er)
                 respuestas.append(er)
 
