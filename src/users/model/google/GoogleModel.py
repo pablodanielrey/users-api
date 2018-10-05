@@ -24,7 +24,7 @@ class GoogleModel:
         service = None
 
     @classmethod
-    def _chequear_errores(cls, uid):
+    def _chequear_errores(cls, session, uid):
         errores = session.query(ErrorGoogle).filter(ErrorGoogle.usuario_id == uid).count()
         return errores > cls.errores_maximos
             
@@ -160,7 +160,7 @@ class GoogleModel:
         sincronizados = []
         for u in usuarios:
             try:
-                if cls._chequear_errores(u.id):
+                if cls._chequear_errores(session, u.id):
                     continue
                 ru = cls._sincronizar(session, u)
                 u.google = False
