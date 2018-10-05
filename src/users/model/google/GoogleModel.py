@@ -7,6 +7,7 @@ import os
 import datetime
 import uuid
 import logging
+import json
 
 from users.model.entities import Usuario, Mail, ErrorGoogle, RespuestaGoogle
 from .GoogleAuthApi import GAuthApis
@@ -67,7 +68,7 @@ class GoogleModel:
 
                 rg = RespuestaGoogle()
                 rg.usuario_id = usuario.id
-                rg.respuesta = r
+                rg.respuesta = json.dumps(r)
                 session.add(rg)
 
         else:
@@ -93,7 +94,7 @@ class GoogleModel:
 
             rg = RespuestaGoogle()
             rg.usuario_id = usuario.id
-            rg.respuesta = r
+            rg.respuesta = json.dumps(r)
             session.add(rg)            
 
         return r
@@ -115,7 +116,7 @@ class GoogleModel:
 
                 rg = RespuestaGoogle()
                 rg.usuario_id = usuario.id
-                rg.respuesta = r
+                rg.respuesta = json.dumps(r)
                 session.add(rg)
 
                 respuestas.append(r)
