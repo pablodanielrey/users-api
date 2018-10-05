@@ -25,7 +25,7 @@ class GoogleModel:
 
     @classmethod
     def _chequear_errores(cls, uid):
-        errores = session.query(ErrorGoogle).filter(ErrorGoogle.usuario_id == usuario.id).count()
+        errores = session.query(ErrorGoogle).filter(ErrorGoogle.usuario_id == uid).count()
         return errores > cls.errores_maximos
             
 
