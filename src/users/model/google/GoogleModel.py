@@ -8,7 +8,7 @@ import datetime
 import uuid
 import logging
 
-from users.model.entities import Usuario, Mail, ErrorGoogle
+from users.model.entities import Usuario, Mail, ErrorGoogle, RespuestaGoogle
 from .GoogleAuthApi import GAuthApis
 
 
@@ -65,6 +65,11 @@ class GoogleModel:
                 }
                 r = cls.service.users().update(userKey=usuario_google,body=datos).execute()
 
+                rg = RespuestaGoogle()
+                rg.usuario_id = usuario.id
+                rg.respuesta = r
+                session.add(rg)
+
         else:
             aliases = cls._obtener_alias_para_google(usuario)
 
@@ -86,6 +91,11 @@ class GoogleModel:
 
             r = cls.service.users().insert(body=datos).execute()
 
+            rg = RespuestaGoogle()
+            rg.usuario_id = usuario.id
+            rg.respuesta = r
+            session.add(rg)            
+
         return r
 
     @classmethod
@@ -102,6 +112,12 @@ class GoogleModel:
         for e in aliases_faltantes:
             try: 
                 r = cls.service.users().aliases().insert(userKey=username, body={"alias":e}).execute()
+
+                rg = RespuestaGoogle()
+                rg.usuario_id = usuario.id
+                rg.respuesta = r
+                session.add(rg)
+
                 respuestas.append(r)
 
             except Exception as e1:
@@ -139,6 +155,7 @@ class GoogleModel:
     @classmethod
     def _sincronizar(cls, session, u):
         r1 = cls.actualizar_o_crear_usuario_en_google(session, u)
+        session.commit()
 
         r2 = cls.actualizar_correos_desde_google(session,u)
         session.commit()
