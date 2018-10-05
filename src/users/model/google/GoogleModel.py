@@ -159,7 +159,7 @@ class GoogleModel:
         sincronizados = []
         for u in usuarios:
             try:
-                if cls._chequear_errores(usuario.id):
+                if cls._chequear_errores(u.id):
                     continue
                 ru = cls._sincronizar(session, u)
                 u.google = False
