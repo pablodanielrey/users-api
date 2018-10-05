@@ -381,6 +381,7 @@ def sincronizar_usuario(uid, token=None):
 
     with obtener_session() as session:
         r = GoogleModel.sincronizar(session, uid)
+        session.commit()
         return r
 
 @app.route(API_BASE + '/usuarios/sincronizar_google', methods=['GET'])
