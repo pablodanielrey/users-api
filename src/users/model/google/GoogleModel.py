@@ -18,8 +18,10 @@ class GoogleModel:
     admin = os.environ.get('ADMIN_USER_GOOGLE')
     errores_maximos = 5
 
-    if bool(os.environ.get('GOOGLE_SYNC',0)):
+    if bool(int(os.environ.get('GOOGLE_SYNC',0))):
         service = GAuthApis.getServiceAdmin(admin)
+    else:
+        service = None
 
     @classmethod
     def _chequear_errores(cls, uid):
