@@ -169,6 +169,76 @@ class UsersModel:
 
 
     @classmethod
+    def actualizar_usuario_v2(cls, session, uid, datos):
+        assert uid is not None
+
+        import re
+        g = re.match('((\w)*\s*)*', datos['nombre'])
+        if not g:
+            raise FormatoIncorrecto()
+        nombre = g.group()
+
+        g2 = re.match('((\w)*\s*)*', datos['apellido'])
+        if not g:
+            raise FormatoIncorrecto()
+        apellido = g2.group()
+
+        q = session.query(Usuario).filter(Usuario.id == uid)
+        q = q.options(joinedload('telefonos'))
+        usuario = q.one()
+        usuario.dirty = True
+        usuario.nombre = nombre
+        usuario.apellido = apellido
+        usuario.actualizado = datetime.datetime.now()
+
+        if 'legajo' in datos:
+            usuario.legajo = datos['legajo']
+        if 'genero' in datos:
+            usuario.genero = datos['genero']
+        if 'direccion' in datos:
+            usuario.direccion = datos['direccion']
+        if 'ciudad' in datos:
+            usuario.ciudad = datos['ciudad']
+        if 'pais' in datos:
+            usuario.pais = datos['pais']
+        if 'nacimiento' in datos:
+            usuario.nacimiento = datos['nacimiento']
+        if 'telefonoFijo' in datos:            
+            nro = datos['telefonoFijo'].strip()
+            telFijo = [tel for tel in usuario.telefonos if tel.tipo == 'fijo' and tel.eliminado is None]  
+            if len(telFijo) > 0:
+                t = telFijo[0]                
+                if nro == '':
+                    t.eliminado = datetime.datetime.now()
+                else:                                    
+                    t.numero = nro
+                t.actualizado = datetime.datetime.now()
+            elif nro != '':
+                telNuevo = Telefono(numero=nro)
+                telNuevo.id = str(uuid.uuid4())
+                telNuevo.tipo = 'fijo'
+                telNuevo.usuario_id = uid
+                session.add(telNuevo)                                
+
+        if 'telefonoMovil' in datos:
+            telMovil = [tel for tel in usuario.telefonos if tel.tipo == 'movil' and tel.eliminado is None] 
+            nro = datos['telefonoMovil'].strip()
+            if len(telMovil) > 0:
+                t = telMovil[0]
+                if nro == '':
+                    t.eliminado = datetime.datetime.now()
+                else:
+                    t.numero = nro
+                t.actualizado = datetime.datetime.now()
+            elif nro != '':
+                telNuevo = Telefono(numero=nro)
+                telNuevo.id = str(uuid.uuid4())
+                telNuevo.tipo = 'movil'
+                telNuevo.usuario_id = uid
+                session.add(telNuevo)                
+        
+
+    @classmethod
     def usuario_por_dni(cls, session, dni=None):
         assert dni is not None
         q = session.query(Usuario).filter(Usuario.dni == dni)
