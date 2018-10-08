@@ -1,8 +1,9 @@
-import datetime
+from datetime import datetime, time, timedelta
 from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, func, or_
 from sqlalchemy.orm import relationship
 
 from model_utils import Base
+import pytz
 
 class Usuario(Base):
 
@@ -28,3 +29,14 @@ class Usuario(Base):
 
     mails = relationship('Mail', back_populates='usuario')
     telefonos = relationship('Telefono', back_populates='usuario')
+
+    
+    def obtener_nacimiento(self, tz):
+        return self._localizar_fecha_en_zona(self.nacimiento, tz)
+    
+
+    def _localizar_fecha_en_zona(self, fecha, tz):
+        timezone = pytz.timezone(tz)
+        dt = datetime.combine(fecha, time(0))
+        dt = timezone.localize(dt)
+        return dt

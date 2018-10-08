@@ -187,6 +187,8 @@ class UsersModel:
 
         q = q.options(joinedload('mails'), joinedload('telefonos'))
         #q = q.filter(Telefono.eliminado == None)
+        u = q.one()
+        u.nacimiento = u.obtener_nacimiento('America/Argentina/Buenos_Aires')
         return q.one()
 
     @classmethod
