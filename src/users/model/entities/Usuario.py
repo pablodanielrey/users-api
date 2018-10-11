@@ -35,7 +35,9 @@ class Usuario(Base):
         return self._localizar_fecha_en_zona(self.nacimiento, tz)
     
 
-    def _localizar_fecha_en_zona(self, fecha, tz):
+    def _localizar_fecha_en_zona(self, fecha, tz='America/Argentina/Buenos_Aires'):
+        if fecha is None:
+            return None
         timezone = pytz.timezone(tz)
         dt = datetime.combine(fecha, time(0))
         dt = timezone.localize(dt)
