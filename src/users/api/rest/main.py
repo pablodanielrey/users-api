@@ -142,31 +142,6 @@ def actualizar_usuario(uid, token=None):
 
     datos = json.loads(request.data)
     with obtener_session() as session:
-        UsersModel.actualizar_usuario(session, uid, datos)
-        session.commit()
-        return uid
-
-
-@warden.require_valid_token
-@jsonapi
-def actualizar_usuario_v2(uid, token=None):
-
-    admin = False
-    prof = warden.has_all_profiles(token, ['users-super-admin'])
-    if prof and prof['profile']:
-        admin = True
-    else:
-        prof = warden.has_all_profiles(token, ['users-admin'])
-        if prof:
-            admin = prof['profile']
-
-    if not admin:
-        auid = token['sub']
-        if auid != uid:
-            return ('no tiene los permisos suficientes', 403)   
-
-    datos = json.loads(request.data)
-    with obtener_session() as session:
         UsersModel.actualizar_usuario_v2(session, uid, datos)
         session.commit()
         return uid
