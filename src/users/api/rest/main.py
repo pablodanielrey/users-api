@@ -25,7 +25,6 @@ warden_url = os.environ['WARDEN_API_URL']
 warden = Warden(OIDC_URL, warden_url, client_id, client_secret, verify=VERIFY_SSL)
 
 API_BASE=os.environ['API_BASE']
-API_BASE_V2=os.environ['API_BASE_V2']
 
 app = Flask(__name__)
 app.debug = True
