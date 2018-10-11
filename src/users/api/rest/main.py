@@ -46,51 +46,22 @@ def configurar_debugger():
 configurar_debugger()
 
 
-# @app.route(API_BASE + '/avatar/<hash>.json', methods=['GET'])
-# @jsonapi
-def obtener_avatar(hash):
-    return UsersModel.obtener_avatar(hash=hash)
 
-# @app.route(API_BASE + '/avatar/', methods=['GET'], defaults={'hash':None})
-# @app.route(API_BASE + '/avatar/<hash>', methods=['GET'])
-def obtener_avatar_binario(hash):
-    avatar = obtener_avatar(hash)
-    r = make_response()
-    r.status_code = 200
-    r.data = base64.b64decode(avatar['data'])
-    r.headers['Content-Type'] = avatar['content-type']
-    return r
+@app.route(API_BASE + '/<path:path>', methods=['OPTIONS'])
+def options(path=None):
+    if request.method == 'OPTIONS':
+        return ('',204)
+    return ('',204)
 
-@app.route(API_BASE + '/avatar/<hash>', methods=['PUT','POST'])
-@warden.require_valid_token
-@jsonapi
-def agregar_avatar(hash, token=None):
-    f = request.files['file']
-    contenido = base64.b64encode(f.read()).decode('utf-8')
-    UsersModel.actualizar_avatar(hash, contenido)
-    return {'status':'OK','status_code':200}, 200
+@app.route(API_BASE_V2 + '/<path:path>', methods=['OPTIONS'])
+def options_v2(path=None):
+    if request.method == 'OPTIONS':
+        return ('',204)
+    return ('',204)
 
-@app.route(API_BASE + '/usuarios/<uid>/avatar/', methods=['PUT','POST'])
-@warden.require_valid_token
-@jsonapi
-def agregar_avatar_por_usuario(uid, token=None):
-    h = hashlib.md5(uid.encode()).hexdigest()
-    return agregar_avatar(h)
 
-@app.route(API_BASE + '/usuarios/<uid>/avatar/.json', methods=['GET'])
-@warden.require_valid_token
-@jsonapi
-def obtener_avatar_por_usuario(uid, token=None):
-    h = hashlib.md5(uid.encode()).hexdigest()
-    return obtener_avatar(h)
-
-@app.route(API_BASE + '/usuarios/<uid>/avatar/', methods=['GET'])
-def obtener_avatar_binario_por_usuario(uid, token=None):
-    h = hashlib.md5(uid.encode()).hexdigest()
-    return obtener_avatar_binario(h)
-
-@app.route(API_BASE + '/usuario_por_dni/<dni>', methods=['GET'])
-@app.route(API_BASE_V2 + '/usuario_por_dni/<dni>', methods=['GET'])
+@app.route(API_BASE + '/usuario_por_dni/<dni>', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuario_por_dni/<dni>', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def usuario_por_dni(dni, token=None):
@@ -102,10 +73,10 @@ def usuario_por_dni(dni, token=None):
         u = UsersModel.usuario_por_dni(session=s, dni=dni)
         return u
 
-@app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None})
-@app.route(API_BASE + '/usuarios/<uid>', methods=['GET'])
-@app.route(API_BASE_V2 + '/usuarios/', methods=['GET'], defaults={'uid':None})
-@app.route(API_BASE_V2 + '/usuarios/<uid>', methods=['GET'])
+@app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None}, provide_automatic_options=False)
+@app.route(API_BASE + '/usuarios/<uid>', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/', methods=['GET'], defaults={'uid':None}, provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def usuarios(uid, token=None):
@@ -143,8 +114,8 @@ def usuarios(uid, token=None):
             us = UsersModel.usuarios(session=session, search=search, offset=offset, limit=limit)
             return us
 
-@app.route(API_BASE + '/usuarios', methods=['PUT'])
-@app.route(API_BASE_V2 + '/usuarios', methods=['PUT'])
+@app.route(API_BASE + '/usuarios', methods=['PUT'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios', methods=['PUT'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def crear_usuario(token=None):
@@ -160,7 +131,7 @@ def crear_usuario(token=None):
         session.commit()
         return uid
 
-@app.route(API_BASE + '/usuarios/<uid>', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>', methods=['PUT','POST'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def actualizar_usuario(uid, token=None):
@@ -186,7 +157,7 @@ def actualizar_usuario(uid, token=None):
         return uid
 
 
-@app.route(API_BASE_V2 + '/usuarios/<uid>', methods=['PUT','POST'])
+@app.route(API_BASE_V2 + '/usuarios/<uid>', methods=['PUT','POST'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def actualizar_usuario_v2(uid, token=None):
@@ -212,12 +183,12 @@ def actualizar_usuario_v2(uid, token=None):
         return uid
 
 
-@app.route(API_BASE + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
-@app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
-@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['GET'])
-@app.route(API_BASE_V2 + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None})
-@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None})
-@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/<cid>', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None}, provide_automatic_options=False)
+@app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None}, provide_automatic_options=False)
+@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/correos', methods=['GET'], defaults={'cid':None}, provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/', methods=['GET'], defaults={'cid':None}, provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/<cid>', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def correos_de_usuario(uid, cid, token=None):
@@ -242,8 +213,8 @@ def correos_de_usuario(uid, cid, token=None):
     with obtener_session() as session:
         return UsersModel.correos(session=session, usuario=uid, historico=h, offset=offset, limit=limit)
 
-@app.route(API_BASE + '/usuarios/<uid>/correo_institucional', methods=['PUT','POST'])
-@app.route(API_BASE_V2 + '/usuarios/<uid>/correo_institucional', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>/correo_institucional', methods=['PUT','POST'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/correo_institucional', methods=['PUT','POST'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def agregar_correo_institucional(uid, token=None):
@@ -268,8 +239,8 @@ def agregar_correo_institucional(uid, token=None):
             session.commit()
         return mail.id
 
-@app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['PUT','POST'])
-@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>/correos/', methods=['PUT','POST'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/', methods=['PUT','POST'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def agregar_correo(uid, token=None):
@@ -297,10 +268,10 @@ def agregar_correo(uid, token=None):
         session.commit()
         return {'cid':cid}
 
-@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['DELETE'])
-@app.route(API_BASE + '/correos/<cid>', methods=['DELETE'])
-@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/<cid>', methods=['DELETE'])
-@app.route(API_BASE_V2 + '/correos/<cid>', methods=['DELETE'])
+@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['DELETE'], provide_automatic_options=False)
+@app.route(API_BASE + '/correos/<cid>', methods=['DELETE'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/<cid>', methods=['DELETE'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/correos/<cid>', methods=['DELETE'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def eliminar_correo(uid=None, cid=None, token=None):
@@ -321,8 +292,8 @@ def eliminar_correo(uid=None, cid=None, token=None):
         return {'id':cid}
 
 
-@app.route(API_BASE + '/usuarios/<uid>/telefonos/<tid>', methods=['DELETE'])
-@app.route(API_BASE + '/telefonos/<tid>', methods=['DELETE'])
+@app.route(API_BASE + '/usuarios/<uid>/telefonos/<tid>', methods=['DELETE'], provide_automatic_options=False)
+@app.route(API_BASE + '/telefonos/<tid>', methods=['DELETE'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def eliminar_telefono(uid=None, tid=None, token=None):
@@ -339,8 +310,8 @@ def eliminar_telefono(uid=None, tid=None, token=None):
         return {'id':tid}
 
 
-@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'])
-@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/<cid>/enviar_confirmar', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def enviar_confirmar_correo(uid, cid, token=None):
@@ -363,8 +334,8 @@ def enviar_confirmar_correo(uid, cid, token=None):
         UsersModel.enviar_confirmar_correo(session, cid)
         session.commit()
 
-@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/confirmar', methods=['PUT','POST'])
-@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/<cid>/confirmar', methods=['PUT','POST'])
+@app.route(API_BASE + '/usuarios/<uid>/correos/<cid>/confirmar', methods=['PUT','POST'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/correos/<cid>/confirmar', methods=['PUT','POST'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def confirmar_correo(uid, cid, token=None):
@@ -389,8 +360,8 @@ def confirmar_correo(uid, cid, token=None):
         UsersModel.confirmar_correo(session=session, cid=cid, code=code)
         session.commit()
 
-@app.route(API_BASE + '/correos/<cuenta>', methods=['GET'])
-@app.route(API_BASE_V2 + '/correos/<cuenta>', methods=['GET'])
+@app.route(API_BASE + '/correos/<cuenta>', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/correos/<cuenta>', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def chequear_disponibilidad_cuenta(cuenta, token=None):
@@ -415,8 +386,8 @@ def chequear_disponibilidad_cuenta(cuenta, token=None):
 
 from users.model.google.GoogleModel import GoogleModel
 
-@app.route(API_BASE + '/usuarios/<uid>/sincronizar_google', methods=['GET'])
-@app.route(API_BASE_V2 + '/usuarios/<uid>/sincronizar_google', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/sincronizar_google', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/sincronizar_google', methods=['GET'], provide_automatic_options=False)
 #@warden.require_valid_token
 @jsonapi
 def sincronizar_usuario(uid, token=None):
@@ -426,8 +397,8 @@ def sincronizar_usuario(uid, token=None):
         session.commit()
         return r
 
-@app.route(API_BASE + '/usuarios/sincronizar_google', methods=['GET'])
-@app.route(API_BASE_V2 + '/usuarios/sincronizar_google', methods=['GET'])
+@app.route(API_BASE + '/usuarios/sincronizar_google', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/sincronizar_google', methods=['GET'], provide_automatic_options=False)
 #@warden.require_valid_token
 @jsonapi
 def sincronizar_usuarios(token=None):
@@ -446,8 +417,8 @@ def sincronizar_usuarios(token=None):
     ////////////////////////////////////////////////////////////////
 """
 
-@app.route(API_BASE + '/precondiciones', methods=['GET'])
-@app.route(API_BASE_V2 + '/precondiciones', methods=['GET'])
+@app.route(API_BASE + '/precondiciones', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/precondiciones', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def chequear_precondiciones_usuario(token=None):
@@ -456,8 +427,8 @@ def chequear_precondiciones_usuario(token=None):
     with obtener_session() as s:
         return UsersModel.precondiciones(s,uid)
 
-@app.route(API_BASE + '/usuarios/<uid>/precondiciones', methods=['GET'])
-@app.route(API_BASE_V2 + '/usuarios/<uid>/precondiciones', methods=['GET'])
+@app.route(API_BASE + '/usuarios/<uid>/precondiciones', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE_V2 + '/usuarios/<uid>/precondiciones', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def chequear_precondiciones_de_usuario(uid, token=None):
@@ -471,30 +442,11 @@ def chequear_precondiciones_de_usuario(uid, token=None):
 
 
 
-
-
-
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET','POST','PUT','PATCH'])
 def catch_all(path):
     return ('no permitido', 401)
 
-if DEBUGGING:
-    @app.before_request
-    def br():
-        logging.info(request)
-
-@app.route(API_BASE + '*', methods=['OPTIONS'])
-def options():
-    if request.method == 'OPTIONS':
-        return 204
-    return 204
-
-@app.route(API_BASE_V2 + '*', methods=['OPTIONS'])
-def options_v2():
-    if request.method == 'OPTIONS':
-        return 204
-    return 204    
 
 def cors_after_request(response):
     if not response.headers.get('Access-Control-Allow-Origin',None):
@@ -514,6 +466,7 @@ def add_header(r):
     r.headers["Pragma"] = "no-cache"
     r.headers["Expires"] = "0"
     r.headers['Cache-Control'] = 'public, max-age=0'
+
     return r
 
 
