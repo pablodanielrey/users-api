@@ -485,11 +485,16 @@ if DEBUGGING:
         logging.info(request)
 
 @app.route(API_BASE + '*', methods=['OPTIONS'])
-@app.route(API_BASE_V2 + '*', methods=['OPTIONS'])
 def options():
     if request.method == 'OPTIONS':
         return 204
     return 204
+
+@app.route(API_BASE_V2 + '*', methods=['OPTIONS'])
+def options_v2():
+    if request.method == 'OPTIONS':
+        return 204
+    return 204    
 
 def cors_after_request(response):
     if not response.headers.get('Access-Control-Allow-Origin',None):
