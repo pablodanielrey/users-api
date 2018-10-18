@@ -88,7 +88,7 @@ def usuarios(uid, token=None):
     if prof and prof['profile']:
         admin = True
     else:
-        prof = warden.has_all_profiles(token, ['users-admin'])
+        prof = warden.has_one_profiles(token, ['users-admin', 'users-operator'])
         if prof:
             admin = prof['profile']
 
@@ -159,7 +159,7 @@ def correos_de_usuario(uid, cid, token=None):
     if prof and prof['profile']:
         admin = True
     else:
-        prof = warden.has_all_profiles(token, ['users-admin'])
+        prof = warden.has_one_profiles(token, ['users-admin','users-operator'])
         if prof:
             admin = prof['profile']
 
