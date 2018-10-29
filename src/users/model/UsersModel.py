@@ -372,7 +372,7 @@ class UsersModel:
         if cls._es_dominio_interno(email):
             raise Exception(f'{email} no puede ser una cuenta de un dominio interno')
 
-        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == email, Mail.confirmado, Mail.eliminado == None).order_by(Mail.creado.desc()).all()
+        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == email, Mail.confirmado != None, Mail.eliminado == None).order_by(Mail.creado.desc()).all()
         for m in mails:
             ''' ya existe, no lo agrego pero no tiro error '''
             return m.id
