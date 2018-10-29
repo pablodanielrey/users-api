@@ -363,6 +363,33 @@ class UsersModel:
         return mail.id
 
     @classmethod
+    def agregar_correo_confirmado(cls, session, uid, datos):
+        assert 'email' in datos
+        assert len(datos['email'].strip()) > 0
+
+        email = datos['email'].lower().replace(' ','')
+
+        if cls._es_dominio_interno(email):
+            raise Exception(f'{email} no puede ser una cuenta de un dominio interno')
+
+        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == email, Mail.confirmado, Mail.eliminado == None).order_by(Mail.creado.desc()).all()
+        for m in mails:
+            ''' ya existe, no lo agrego pero no tiro error '''
+            return m.id
+
+        usuario = session.query(Usuario).filter(Usuario.id == uid).one()
+        mail = Mail(email=email)
+        mail.id = str(uuid.uuid4())
+        mail.confirmado = datetime.datetime.now()
+        session.add(mail)
+        
+        usuario.mails.append(mail)
+        usuario.actualizado = datetime.datetime.now()        
+        usuario.dirty = True
+
+        return mail.id     
+
+    @classmethod
     def eliminar_correo(cls, session, cid):
         correo = session.query(Mail).filter(Mail.id == cid).one()
         correo.eliminado = datetime.datetime.now()
