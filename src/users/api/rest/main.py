@@ -252,6 +252,26 @@ def agregar_correo(uid, token=None):
         session.commit()
         return {'cid':cid}
 
+@app.route(API_BASE + '/usuarios/<uid>/correos/sin_confirmacion', methods=['PUT','POST'], provide_automatic_options=False)
+@warden.require_valid_token
+@jsonapi
+def agregar_correo_confirmado(uid, token=None):
+
+    admin = False
+    prof = warden.has_all_profiles(token, ['users-super-admin'])
+    if prof and prof['profile']:
+        admin = True
+
+    if not admin:
+            return ('no tiene los permisos suficientes', 403)
+
+    assert uid != None
+    datos = json.loads(request.data)
+    with obtener_session() as session:
+        cid = UsersModel.agregar_correo_confirmado(session=session, uid=uid, datos=datos)
+        session.commit()
+        return {'cid':cid}
+
 @app.route(API_BASE + '/usuarios/<uid>/correos/<cid>', methods=['DELETE'], provide_automatic_options=False)
 @app.route(API_BASE + '/correos/<cid>', methods=['DELETE'], provide_automatic_options=False)
 @warden.require_valid_token
