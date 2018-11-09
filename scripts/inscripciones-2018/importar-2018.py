@@ -37,7 +37,7 @@ if __name__ == '__main__':
                     logging.info(a)
                     nombre = a[1].split(',')[1].strip().capitalize()
                     apellido = a[1].split(',')[0].strip().capitalize()
-                    dni = a[2].lower().strip().replace('dni', '').replace('ci','').replace('pas','')
+                    dni = a[2].lower().strip().replace('dni', '').replace('ci','').replace('pas','').replace('dnt', '')
                     uid = str(uuid.uuid4())
                     logging.info('importando {} {} {}'.format(nombre, apellido, dni))
                     cur.execute('select id from usuarios where dni = %s', (dni,))
@@ -47,9 +47,9 @@ if __name__ == '__main__':
                     else:
                         uid = cur.fetchone()[0]
                         le.info('{},{},{},{},existente - se actualiza tipo'.format(uid, dni, nombre, apellido))
-                        cur.execute('update usuarios set tipo = %s where dni = %s', ('ingresante', dni))
+                        cur.execute('update usuarios set tipo = %s where id = %s', ('ingresante', uid))
 
-            #conn.commit()
+            conn.commit()
 
         except Exception as e:
             logging.exception(e)
