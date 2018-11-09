@@ -37,7 +37,7 @@ if __name__ == '__main__':
                     logging.info(a)
                     nombre = a[1].split(',')[1].strip().capitalize()
                     apellido = a[1].split(',')[0].strip().capitalize()
-                    dni = a[2].lower().strip().replace('dni', '').replace('ci','').replace('pas','').replace('dnt', '')
+                    dni = a[2].lower().strip().replace('dni', '').replace('ci','').replace('pas','').replace('dnt', '').replace(' ','')
                     uid = str(uuid.uuid4())
                     logging.info('importando {} {} {}'.format(nombre, apellido, dni))
                     cur.execute('select id from usuarios where dni = %s', (dni,))
