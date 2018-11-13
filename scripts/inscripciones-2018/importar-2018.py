@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     le = logging.getLogger('existente')
     leh = logging.FileHandler('existente.log')
-    le.addHandler(lih)
+    le.addHandler(leh)
 
     h = os.environ['USERS_DB_HOST']
     pp = os.environ['USERS_DB_PORT']
