@@ -187,12 +187,17 @@ class UsersModel:
         q = q.options(joinedload('telefonos'))
         usuario = q.one()
         usuario.dirty = True
-        usuario.nombre = nombre
-        usuario.apellido = apellido
         usuario.actualizado = datetime.datetime.now()
 
-        if 'legajo' in datos:
-            usuario.legajo = datos['legajo']
+        """
+            chequea que el mismo usuario no pueda modificar su nombre
+        """
+        if usuario.id != uid:
+            usuario.nombre = nombre
+            usuario.apellido = apellido
+            if 'legajo' in datos:
+                usuario.legajo = datos['legajo']
+    
         if 'genero' in datos:
             usuario.genero = datos['genero']
         if 'direccion' in datos:
