@@ -1,6 +1,7 @@
 import sys
 import csv
 import re
+from dateutil.parser import parse
 import logging
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -21,12 +22,13 @@ if __name__ == '__main__':
                     continue
 
                 dni = r[1].strip().lower()
+                nacimiento = parse(r[19])
                 n = r[2].split(',')
                 nombre = ''
                 apellido = ''
                 if len(n) >= 2:
-                    nombre = n[0].strip().capitalize()
-                    apellido = n[1].strip().capitalize()
+                    apellido = n[0].strip().capitalize()
+                    nombre = n[1].strip().capitalize()
                 else:
                     nombre = n[0].strip().capitalize()
 
@@ -34,7 +36,8 @@ if __name__ == '__main__':
                     'cargo': cargo,
                     'dni': dni,
                     'nombre': nombre,
-                    'apellido': apellido
+                    'apellido': apellido,
+                    'nacimiento': nacimiento
                 }
                 
                 #m = reg.match(cargo)
@@ -43,5 +46,11 @@ if __name__ == '__main__':
                 if not u:
                     logging.debug('{} {} {} no existe, se crea la persona'.format(dni, nombre, apellido))
                     UsersModel.crear_usuario(s,r)
+                    s.commit()
+                else:
+                    logging.debug('{} {} {} ya existe, se actualiza'.format(dni, nombre, apellido))
+                    uid = u.id
+                    logging.debug(r)
+                    UsersModel.actualizar_usuario(s, uid, r)
                     s.commit()
                         
