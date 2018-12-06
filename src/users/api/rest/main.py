@@ -1,5 +1,5 @@
 import logging
-logging.getLogger().setLevel(logging.INFO)
+logging.getLogger().setLevel(logging.DEBUG)
 import sys
 import base64
 import hashlib
