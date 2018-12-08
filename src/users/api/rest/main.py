@@ -52,8 +52,6 @@ def options(path=None):
         return ('',204)
     return ('',204)
 
-
-
 @app.route(API_BASE + '/usuario_por_dni/<dni>', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
@@ -66,7 +64,39 @@ def usuario_por_dni(dni, token=None):
         u = UsersModel.usuario_por_dni(session=s, dni=dni)
         return u
 
-@app.route(API_BASE + '/usuarios/', methods=['GET'], defaults={'uid':None}, provide_automatic_options=False)
+@app.route(API_BASE + '/usuarios/', methods=['GET'], provide_automatic_options=False)
+@warden.require_valid_token
+@jsonapi
+def usuarios(token=None):
+
+    """
+    para poder debuggear el require valid token.
+    token = warden._require_valid_token()
+    if not token:
+        return warden._invalid_token()
+    """
+
+    search = request.args.get('q', None)
+    offset = request.args.get('offset',None,int)
+    limit = request.args.get('limit',None,int)
+
+    admin = False
+    prof = warden.has_all_profiles(token, ['users-super-admin'])
+    if prof and prof['profile']:
+        admin = True
+    else:
+        prof = warden.has_one_profile(token, ['users-admin', 'users-operator'])
+        if prof:
+            admin = prof['profile']
+
+    if not admin:
+        return ('no tiene los permisos suficientes', 403)
+
+    with obtener_session() as session:
+        us = UsersModel.usuarios(session=session, search=search, offset=offset, limit=limit)
+        return us
+
+
 @app.route(API_BASE + '/usuarios/<uid>', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
@@ -98,12 +128,8 @@ def usuarios(uid, token=None):
             return ('no tiene los permisos suficientes', 403)
 
     with obtener_session() as session:
-        if uid:
-            us = UsersModel.usuario(session=session, uid=uid)
-            return us
-        else:
-            us = UsersModel.usuarios(session=session, search=search, offset=offset, limit=limit)
-            return us
+        us = UsersModel.usuario(session=session, uid=uid)
+        return us
 
 @app.route(API_BASE + '/usuarios', methods=['PUT'], provide_automatic_options=False)
 @warden.require_valid_token
