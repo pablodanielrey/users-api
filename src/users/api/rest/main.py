@@ -64,7 +64,7 @@ def usuario_por_dni(dni, token=None):
         u = UsersModel.usuario_por_dni(session=s, dni=dni)
         return u
 
-@app.route(API_BASE + '/usuarios/', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE + '/usuarios', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def usuarios(token=None):
