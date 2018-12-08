@@ -26,9 +26,33 @@ warden = Warden(OIDC_URL, warden_url, client_id, client_secret, verify=VERIFY_SS
 
 API_BASE=os.environ['API_BASE']
 
+
+"""
+    -----------------------------
+    el conversor de parámetros
+"""
+
 app = Flask(__name__)
 app.debug = True
 register_encoder(app)
+
+from werkzeug.routing import BaseConverter
+
+class ListConverter(BaseConverter):
+
+    def to_python(self, value):
+        return value.split('+')
+
+    def to_url(self, values):
+        return '+'.join(BaseConverter.to_url(value)
+                        for value in values)
+
+
+app.url_map.converters['list'] = ListConverter
+"""
+    --------------------
+"""
+
 
 DEBUGGING = bool(int(os.environ.get('VSC_DEBUGGING',0)))
 def configurar_debugger():
@@ -67,7 +91,7 @@ def usuario_por_dni(dni, token=None):
 @app.route(API_BASE + '/usuarios', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
-def usuarios(token=None):
+def usuarios_por_search(token=None):
 
     """
     para poder debuggear el require valid token.
@@ -97,21 +121,10 @@ def usuarios(token=None):
         return us
 
 
-@app.route(API_BASE + '/usuarios/<uid>', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE + '/usuarios/<list:uids>', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
-def usuarios(uid, token=None):
-
-    """
-    para poder debuggear el require valid token.
-    token = warden._require_valid_token()
-    if not token:
-        return warden._invalid_token()
-    """
-
-    search = request.args.get('q', None)
-    offset = request.args.get('offset',None,int)
-    limit = request.args.get('limit',None,int)
+def usuarios_por_lista(uids=[], token=None):
 
     admin = False
     prof = warden.has_all_profiles(token, ['users-super-admin'])
@@ -124,12 +137,16 @@ def usuarios(uid, token=None):
 
     if not admin:
         auid = token['sub']
-        if auid != uid:
+        if len(uids) != 1 and auid != uids[0]:
             return ('no tiene los permisos suficientes', 403)
 
     with obtener_session() as session:
-        us = UsersModel.usuario(session=session, uid=uid)
-        return us
+        usuarios = []
+        for uid in uids:
+            us = UsersModel.usuario(session=session, uid=uid)
+            usuarios.append(us)
+        return usuarios
+
 
 @app.route(API_BASE + '/usuarios', methods=['PUT'], provide_automatic_options=False)
 @warden.require_valid_token

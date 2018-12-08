@@ -12,7 +12,7 @@
 from setuptools import setup, find_packages
 
 setup(name='users',
-          version='1.0.2.a2',
+          version='1.1.0a1',
           description='Proyecto que implementa la api de usuarios',
           url='https://github.com/pablodanielrey/users-api',
           author='Desarrollo DiTeSi, FCE',
