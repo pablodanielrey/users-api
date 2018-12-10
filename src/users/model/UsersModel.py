@@ -263,8 +263,9 @@ class UsersModel:
         q = q.options(joinedload('mails'), joinedload('telefonos'))
         #q = q.filter(Telefono.eliminado == None)
         u = q.one()
-        u.nacimiento = u.obtener_nacimiento('America/Argentina/Buenos_Aires')
-        return q.one()
+        if u:
+            u.nacimiento = u.obtener_nacimiento('America/Argentina/Buenos_Aires')
+        return u
 
     @classmethod
     def encontrarUsuariosPorSearch(cls, session, search, offset=None, limit=None):

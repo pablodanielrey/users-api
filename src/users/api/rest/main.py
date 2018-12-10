@@ -5,6 +5,7 @@ import base64
 import hashlib
 import os
 
+from sqlalchemy.orm.exc import NoResultFound
 from flask import Flask, abort, make_response, jsonify, url_for, request, json, send_from_directory, send_file
 from users.model import UsersModel
 from flask_jsontools import jsonapi
@@ -143,8 +144,12 @@ def usuarios_por_lista(uids=[], token=None):
     with obtener_session() as session:
         usuarios = []
         for uid in uids:
-            us = UsersModel.usuario(session=session, uid=uid)
-            usuarios.append(us)
+            try:
+                us = UsersModel.usuario(session=session, uid=uid)
+                usuarios.append(us)
+            except NoResultFound as e:
+                logging.warn('{} no existe'.format(uid))
+
         return usuarios
 
 
