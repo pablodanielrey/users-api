@@ -1,6 +1,8 @@
 import os
 import uuid
 import datetime
+import dateutils
+from dateutils.parser import parse
 import base64
 import requests
 import logging
@@ -207,7 +209,7 @@ class UsersModel:
         if 'pais' in datos:
             usuario.pais = datos['pais']
         if 'nacimiento' in datos and datos['nacimiento'].strip() != '':
-            usuario.nacimiento = datos['nacimiento']
+            usuario.nacimiento = parse(datos['nacimiento'])
         if 'telefonoFijo' in datos:            
             nro = datos['telefonoFijo'].strip()
             telFijo = [tel for tel in usuario.telefonos if tel.tipo == 'fijo' and tel.eliminado is None]  
