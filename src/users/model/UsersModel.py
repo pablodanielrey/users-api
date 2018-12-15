@@ -1,8 +1,8 @@
 import os
 import uuid
 import datetime
-import dateutils
-from dateutils.parser import parse
+import dateutil
+from dateutil.parser import parse
 import base64
 import requests
 import logging
