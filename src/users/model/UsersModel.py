@@ -206,7 +206,7 @@ class UsersModel:
             usuario.ciudad = datos['ciudad']
         if 'pais' in datos:
             usuario.pais = datos['pais']
-        if 'nacimiento' in datos:
+        if 'nacimiento' in datos and datos['nacimiento'].strip() != '':
             usuario.nacimiento = datos['nacimiento']
         if 'telefonoFijo' in datos:            
             nro = datos['telefonoFijo'].strip()
