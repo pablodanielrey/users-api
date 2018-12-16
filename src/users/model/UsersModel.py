@@ -291,6 +291,12 @@ class UsersModel:
         return cls.encontrarUsuariosPorSearch(session, search, offset=offset, limit=limit)
 
     @classmethod
+    def usuarios_uuids(cls, session):
+        q = session.query(Usuario.id).distinct()
+        usuarios = [u[0] for u in q]
+        return usuarios
+
+    @classmethod
     def existe(cls, session, usuario):
         if session.query(Usuario).filter(Usuario.id == usuario).count() > 0:
             return True

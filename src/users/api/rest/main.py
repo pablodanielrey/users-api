@@ -121,6 +121,26 @@ def usuarios_por_search(token=None):
         us = UsersModel.usuarios(session=session, search=search, offset=offset, limit=limit)
         return us
 
+@app.route(API_BASE + '/usuarios/uids', methods=['GET'], provide_automatic_options=False)
+@warden.require_valid_token
+@jsonapi
+def uuids_usuarios(token=None):
+    admin = False
+    prof = warden.has_all_profiles(token, ['users-super-admin'])
+    if prof and prof['profile']:
+        admin = True
+    else:
+        prof = warden.has_one_profile(token, ['users-admin', 'users-operator'])
+        if prof:
+            admin = prof['profile']
+
+    if not admin:
+        return ('no tiene los permisos suficientes', 403)
+
+    with obtener_session() as session:
+        us = UsersModel.usuarios_uuids(session=session)
+        return us        
+
 
 @app.route(API_BASE + '/usuarios/<list:uids>', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
