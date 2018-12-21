@@ -197,6 +197,7 @@ class UsersModel:
         log.autorizador_id = auid
         log.datos = json.dumps(datos)
         log.actualizado = actualizado
+        session.add(log)
 
 
         q = session.query(Usuario).filter(Usuario.id == uid)
