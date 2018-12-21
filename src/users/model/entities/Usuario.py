@@ -1,9 +1,19 @@
 from datetime import datetime, time, timedelta
-from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, func, or_
+from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, func, or_, ForeignKey
 from sqlalchemy.orm import relationship
 
 from model_utils import Base
 import pytz
+
+
+class LogUsuario(Base):
+
+    __tablename__ = 'log_usuario'
+
+    usuario_id = Column(String, ForeignKey('usuarios.id'))
+    autorizador_id = Column(String, ForeignKey('usuarios.id'))
+    datos = Column(String)
+
 
 class Usuario(Base):
 
@@ -29,11 +39,9 @@ class Usuario(Base):
 
     mails = relationship('Mail', back_populates='usuario')
     telefonos = relationship('Telefono', back_populates='usuario')
-
     
     def obtener_nacimiento(self, tz):
         return self._localizar_fecha_en_zona(self.nacimiento, tz)
-    
 
     def _localizar_fecha_en_zona(self, fecha, tz='America/Argentina/Buenos_Aires'):
         if fecha is None:

@@ -6,6 +6,7 @@ from dateutil.parser import parse
 import base64
 import requests
 import logging
+import json
 
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import joinedload, contains_eager
@@ -171,8 +172,9 @@ class UsersModel:
 
 
     @classmethod
-    def actualizar_usuario_v2(cls, session, uid, datos):
+    def actualizar_usuario_v2(cls, session, auid, uid, datos):
         assert uid is not None
+        assert auid is not None
 
         import re
         g = re.match('((\w)*\s*)*', datos['nombre'])
@@ -185,16 +187,28 @@ class UsersModel:
             raise FormatoIncorrecto()
         apellido = g2.group()
 
+        '''
+            genero un registro de log
+        '''
+        actualizado = datetime.datetime.now()
+
+        log = LogUsuario()
+        log.usuario_id = uid
+        log.autorizador_id = auid
+        log.datos = json.dumps(datos)
+        log.actualizado = actualizado
+
+
         q = session.query(Usuario).filter(Usuario.id == uid)
         q = q.options(joinedload('telefonos'))
         usuario = q.one()
         usuario.dirty = True
-        usuario.actualizado = datetime.datetime.now()
+        usuario.actualizado = actualizado
 
         """
-            chequea que el mismo usuario no pueda modificar su nombre
+            solo usuarios admins podrían modificar nombre apellido y legajo
         """
-        if usuario.id != uid:
+        if auid != uid:
             usuario.nombre = nombre
             usuario.apellido = apellido
             if 'legajo' in datos:
@@ -208,7 +222,7 @@ class UsersModel:
             usuario.ciudad = datos['ciudad']
         if 'pais' in datos:
             usuario.pais = datos['pais']
-        if 'nacimiento' in datos and datos['nacimiento'].strip() != '':
+        if 'nacimiento' in datos and datos['nacimiento'] and datos['nacimiento'].strip() != '':
             usuario.nacimiento = parse(datos['nacimiento'])
         if 'telefonoFijo' in datos:            
             nro = datos['telefonoFijo'].strip()
