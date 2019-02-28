@@ -183,7 +183,7 @@ class UsersModel:
         nombre = g.group()
 
         g2 = re.match('((\w)*\s*)*', datos['apellido'])
-        if not g:
+        if not g2:
             raise FormatoIncorrecto()
         apellido = g2.group()
 
@@ -225,40 +225,21 @@ class UsersModel:
             usuario.pais = datos['pais']
         if 'nacimiento' in datos and datos['nacimiento'] and datos['nacimiento'].strip() != '':
             usuario.nacimiento = parse(datos['nacimiento'])
-        if 'telefonoFijo' in datos:            
-            nro = datos['telefonoFijo'].strip()
-            telFijo = [tel for tel in usuario.telefonos if tel.tipo == 'fijo' and tel.eliminado is None]  
-            if len(telFijo) > 0:
-                t = telFijo[0]                
-                if nro == '':
-                    t.eliminado = datetime.datetime.now()
-                else:                                    
-                    t.numero = nro
-                t.actualizado = datetime.datetime.now()
-            elif nro != '':
-                telNuevo = Telefono(numero=nro)
-                telNuevo.id = str(uuid.uuid4())
-                telNuevo.tipo = 'fijo'
-                telNuevo.usuario_id = uid
-                session.add(telNuevo)                                
-
-        if 'telefonoMovil' in datos:
-            telMovil = [tel for tel in usuario.telefonos if tel.tipo == 'movil' and tel.eliminado is None] 
-            nro = datos['telefonoMovil'].strip()
-            if len(telMovil) > 0:
-                t = telMovil[0]
-                if nro == '':
-                    t.eliminado = datetime.datetime.now()
-                else:
-                    t.numero = nro
-                t.actualizado = datetime.datetime.now()
-            elif nro != '':
-                telNuevo = Telefono(numero=nro)
-                telNuevo.id = str(uuid.uuid4())
-                telNuevo.tipo = 'movil'
-                telNuevo.usuario_id = uid
-                session.add(telNuevo)                
         
+        if 'telefonos' in datos:            
+            telefonos_a_agregar = [tel for tel in datos['telefonos'] if 'id' in tel and tel['id'] is None]
+            for tel in telefonos_a_agregar:
+                telNuevo = Telefono(numero=tel['numero'])
+                telNuevo.id = str(uuid.uuid4())
+                telNuevo.tipo = tel['tipo']
+                telNuevo.usuario_id = uid
+                session.add(telNuevo)
+
+            telefonos_a_eliminar = [tel for tel in datos['telefonos'] if 'eliminado' in tel and tel['eliminado'] is not None]
+            for tel in telefonos_a_eliminar:
+                telefono = session.query(Telefono).filter(Telefono.id == tel['id'], Telefono.eliminado == None).one_or_none()
+                if telefono:
+                    telefono.eliminado = datetime.datetime.now()              
 
     @classmethod
     def usuario_por_dni(cls, session, dni=None):
