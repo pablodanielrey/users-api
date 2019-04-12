@@ -192,7 +192,18 @@ class GoogleModel:
             'sincronizados': len(sincronizados)
         }
 
+    @classmethod
+    def sincronizar_usuarios_detalle(cls, session):
+        respuestas = [r for r in session.query(RespuestaGoogle).all()]
+        for r in respuestas:
+            r.respuesta = json.loads(r.respuesta)
+        
 
+        errores = [e for e in session.query(ErrorGoogle).all()]
+        return {
+            'respuestas': respuestas,
+            'errores': errores
+        }
 
     """
 

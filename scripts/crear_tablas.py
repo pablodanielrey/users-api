@@ -5,7 +5,8 @@ if __name__ == '__main__':
     import os
     from sqlalchemy import create_engine
     from model_utils import Base
-    from users.model.entities import *
+    from users.model.entities.Usuario import LogUsuario
+    
 
     def crear_tablas():
         #engine.execute(CreateSchema('users'))

@@ -1,9 +1,12 @@
 import os
 import uuid
 import datetime
+import dateutil
+from dateutil.parser import parse
 import base64
 import requests
 import logging
+import json
 
 from sqlalchemy import or_, and_
 from sqlalchemy.orm import joinedload, contains_eager
@@ -169,8 +172,9 @@ class UsersModel:
 
 
     @classmethod
-    def actualizar_usuario_v2(cls, session, uid, datos):
+    def actualizar_usuario_v2(cls, session, auid, uid, datos):
         assert uid is not None
+        assert auid is not None
 
         import re
         g = re.match('((\w)*\s*)*', datos['nombre'])
@@ -179,20 +183,38 @@ class UsersModel:
         nombre = g.group()
 
         g2 = re.match('((\w)*\s*)*', datos['apellido'])
-        if not g:
+        if not g2:
             raise FormatoIncorrecto()
         apellido = g2.group()
+
+        '''
+            genero un registro de log
+        '''
+        actualizado = datetime.datetime.now()
+
+        log = LogUsuario()
+        log.usuario_id = uid
+        log.autorizador_id = auid
+        log.datos = json.dumps(datos)
+        log.actualizado = actualizado
+        session.add(log)
+
 
         q = session.query(Usuario).filter(Usuario.id == uid)
         q = q.options(joinedload('telefonos'))
         usuario = q.one()
         usuario.dirty = True
-        usuario.nombre = nombre
-        usuario.apellido = apellido
-        usuario.actualizado = datetime.datetime.now()
+        usuario.actualizado = actualizado
 
-        if 'legajo' in datos:
-            usuario.legajo = datos['legajo']
+        """
+            solo usuarios admins podrían modificar nombre apellido y legajo
+        """
+        if auid != uid:
+            usuario.nombre = nombre
+            usuario.apellido = apellido
+            if 'legajo' in datos:
+                usuario.legajo = datos['legajo']
+    
         if 'genero' in datos:
             usuario.genero = datos['genero']
         if 'direccion' in datos:
@@ -201,42 +223,23 @@ class UsersModel:
             usuario.ciudad = datos['ciudad']
         if 'pais' in datos:
             usuario.pais = datos['pais']
-        if 'nacimiento' in datos:
-            usuario.nacimiento = datos['nacimiento']
-        if 'telefonoFijo' in datos:            
-            nro = datos['telefonoFijo'].strip()
-            telFijo = [tel for tel in usuario.telefonos if tel.tipo == 'fijo' and tel.eliminado is None]  
-            if len(telFijo) > 0:
-                t = telFijo[0]                
-                if nro == '':
-                    t.eliminado = datetime.datetime.now()
-                else:                                    
-                    t.numero = nro
-                t.actualizado = datetime.datetime.now()
-            elif nro != '':
-                telNuevo = Telefono(numero=nro)
-                telNuevo.id = str(uuid.uuid4())
-                telNuevo.tipo = 'fijo'
-                telNuevo.usuario_id = uid
-                session.add(telNuevo)                                
-
-        if 'telefonoMovil' in datos:
-            telMovil = [tel for tel in usuario.telefonos if tel.tipo == 'movil' and tel.eliminado is None] 
-            nro = datos['telefonoMovil'].strip()
-            if len(telMovil) > 0:
-                t = telMovil[0]
-                if nro == '':
-                    t.eliminado = datetime.datetime.now()
-                else:
-                    t.numero = nro
-                t.actualizado = datetime.datetime.now()
-            elif nro != '':
-                telNuevo = Telefono(numero=nro)
-                telNuevo.id = str(uuid.uuid4())
-                telNuevo.tipo = 'movil'
-                telNuevo.usuario_id = uid
-                session.add(telNuevo)                
+        if 'nacimiento' in datos and datos['nacimiento'] and datos['nacimiento'].strip() != '':
+            usuario.nacimiento = parse(datos['nacimiento'])
         
+        if 'telefonos' in datos:            
+            telefonos_a_agregar = [tel for tel in datos['telefonos'] if 'id' in tel and tel['id'] is None]
+            for tel in telefonos_a_agregar:
+                telNuevo = Telefono(numero=tel['numero'])
+                telNuevo.id = str(uuid.uuid4())
+                telNuevo.tipo = tel['tipo']
+                telNuevo.usuario_id = uid
+                session.add(telNuevo)
+
+            telefonos_a_eliminar = [tel for tel in datos['telefonos'] if 'eliminado' in tel and tel['eliminado'] is not None]
+            for tel in telefonos_a_eliminar:
+                telefono = session.query(Telefono).filter(Telefono.id == tel['id'], Telefono.eliminado == None).one_or_none()
+                if telefono:
+                    telefono.eliminado = datetime.datetime.now()              
 
     @classmethod
     def usuario_por_dni(cls, session, dni=None):
@@ -258,8 +261,9 @@ class UsersModel:
         q = q.options(joinedload('mails'), joinedload('telefonos'))
         #q = q.filter(Telefono.eliminado == None)
         u = q.one()
-        u.nacimiento = u.obtener_nacimiento('America/Argentina/Buenos_Aires')
-        return q.one()
+        if u:
+            u.nacimiento = u.obtener_nacimiento('America/Argentina/Buenos_Aires')
+        return u
 
     @classmethod
     def encontrarUsuariosPorSearch(cls, session, search, offset=None, limit=None):
@@ -281,6 +285,12 @@ class UsersModel:
     def usuarios(cls, session, search=None, offset=None, limit=None):
         assert search != None
         return cls.encontrarUsuariosPorSearch(session, search, offset=offset, limit=limit)
+
+    @classmethod
+    def usuarios_uuids(cls, session):
+        q = session.query(Usuario.id).distinct()
+        usuarios = [u[0] for u in q]
+        return usuarios
 
     @classmethod
     def existe(cls, session, usuario):
@@ -372,7 +382,7 @@ class UsersModel:
         if cls._es_dominio_interno(email):
             raise Exception(f'{email} no puede ser una cuenta de un dominio interno')
 
-        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == email, Mail.confirmado, Mail.eliminado == None).order_by(Mail.creado.desc()).all()
+        mails = session.query(Mail).filter(Mail.usuario_id == uid, Mail.email == email, Mail.confirmado != None, Mail.eliminado == None).order_by(Mail.creado.desc()).all()
         for m in mails:
             ''' ya existe, no lo agrego pero no tiro error '''
             return m.id
@@ -387,7 +397,7 @@ class UsersModel:
         usuario.actualizado = datetime.datetime.now()        
         usuario.dirty = True
 
-        return mail.id        
+        return mail.id     
 
     @classmethod
     def eliminar_correo(cls, session, cid):
