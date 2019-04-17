@@ -35,8 +35,8 @@ if __name__ == '__main__':
                         header = False
                         continue
                     logging.info(a)
-                    nombre = a[1].split(',')[0].strip().capitalize()
-                    apellido = a[1].split(',')[1].strip().capitalize()
+                    nombre = a[0].strip().capitalize()
+                    apellido = a[1].strip().capitalize()
                     dni = a[2].lower().strip().replace('dni', '').replace('ci','').replace('pas','').replace('dnt', '').replace(' ','')
                     uid = str(uuid.uuid4())
                     logging.info('importando {} {} {}'.format(nombre, apellido, dni))
