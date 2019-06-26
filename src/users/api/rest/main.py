@@ -37,19 +37,9 @@ app = Flask(__name__)
 app.debug = True
 register_encoder(app)
 
-from werkzeug.routing import BaseConverter
-
-class ListConverter(BaseConverter):
-
-    def to_python(self, value):
-        return value.split('+')
-
-    def to_url(self, values):
-        return '+'.join(BaseConverter.to_url(value)
-                        for value in values)
-
-
+from rest_utils.converters.ListConverter import ListConverter
 app.url_map.converters['list'] = ListConverter
+
 """
     --------------------
 """
