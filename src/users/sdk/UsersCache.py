@@ -31,10 +31,9 @@ class UsersCache:
     def obtener_usuario_por_dni(self, headers, dni):
         usuario = self.mongo.usuarios.find_one({'dni':dni})
         if not usuario:
-            usuarios = self.api.obtener_usuarios([uid],headers)
-            if not usuarios or len(usuarios) <= 0:
+            usuario = self.api.obtener_usuario_por_dni(headers, dni)
+            if not usuario:
                 return None
-            usuario = usuarios[0]
             self._setear_usuario(usuario)
         if '_id' in usuario:
             del usuario['_id']
