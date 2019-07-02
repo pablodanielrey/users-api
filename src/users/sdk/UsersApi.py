@@ -1,3 +1,4 @@
+import requests
 
 from oidc.oidc import ClientCredentialsGrant
 
@@ -6,6 +7,8 @@ class UsersApi:
     def __init__(self, oidc_url, client_id, client_secret, users_api_url, verify=True):
         self.cc = ClientCredentialsGrant(oidc_url, client_id, client_secret, verify)
         self.users_api_url = users_api_url
+        self.verify = verify
+
 
     def get_token(self):
         r = self.cc.access_token()
@@ -21,12 +24,14 @@ class UsersApi:
         return headers
 
     def obtener_usuario_por_dni(self, headers, dni):
-        r = requests.get(self.users_api_url + f'/usuario_por_dni/{dni}', verify=self.verify, allow_redirects=False, headers=headers)
+        url = f"{self.users_api_url}/usuario_por_dni/{dni}"
+        r = requests.get(url, verify=self.verify, allow_redirects=False, headers=headers)
         return r.json()
 
     def obtener_usuarios(self, headers, uids=[]):
         puids = '+'.join(uids)
-        r = requests.get(self.users_api_url + f'/usuarios/{puids}', verify=self.verify, allow_redirects=False, headers=headers)
+        url = f"{self.users_api_url}/usuarios/{puids}"
+        r = requests.get(url, verify=self.verify, allow_redirects=False, headers=headers)
         return r.json()
 
     def buscar_usuarios(self, headers, search=None):
