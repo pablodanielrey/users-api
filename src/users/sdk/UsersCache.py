@@ -17,6 +17,13 @@ class UsersCache:
             self.mongo.drop_collection(c)
             self.mongo[c].create_index('insertadoEn',expireAfterSeconds=self.timeout)
 
+    def get_token(self):
+        return self.api.get_token()
+
+    def get_auth_headers(self, tk):
+        return self.api.get_auth_headers(tk)
+
+
     def _setear_usuario(self, usuario):
         usuario['insertadoEn'] = datetime.datetime.utcnow()
         self.mongo.usuarios.insert_one(usuario)
@@ -44,7 +51,7 @@ class UsersCache:
                 faltantes.append(uid)
 
         if len(faltantes) > 0:            
-            fusuarios = self.api.obtener_usuarios(faltantes,headers)
+            fusuarios = self.api.obtener_usuarios(headers,faltantes)
             for usuario in fusuarios:
                 self._setear_usuario(usuario)
             usuarios.extend(fusuarios)

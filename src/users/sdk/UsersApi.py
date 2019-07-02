@@ -15,8 +15,7 @@ class UsersApi:
         tk = self.cc.get_token(r)
         return tk
 
-    @staticmethod
-    def get_auth_headers(tk):
+    def get_auth_headers(self, tk):
         headers = {
             'Authorization': 'Bearer {}'.format(tk),
             'Accept':'application/json'
