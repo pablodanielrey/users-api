@@ -11,7 +11,7 @@
 
 from setuptools import setup, find_packages
 
-setup(name='users',
+setup(name='users-api',
           version='1.7.0',
           description='Proyecto que implementa la api de usuarios',
           url='https://github.com/pablodanielrey/users-api',
