@@ -20,7 +20,7 @@ def check_google(usuario):
     logging.info("Chequeando en google el usuario: {}".format(usuario_google))
     try:
         """ https://developers.google.com/resources/api-libraries/documentation/admin/directory_v1/python/latest/admin_directory_v1.users.html """
-        u = google_service.users().get(userKey=usuario_google).execute()
+        u = google_service.users().get(userKey=usuario_google).execute()        
         return u
     except Exception:
         ''' el usuario no existe '''
@@ -36,7 +36,8 @@ if __name__ == '__main__':
         users = session.query(Usuario).filter(Usuario.id.in_(uids)).all()                        
         with open('/tmp/check_mails_google.csv', 'w') as csvFile:
             writer = csv.writer(csvFile)
-            writer.writerow(['ID','DNI','EMAIL', 'EN GOOGLE', 'ALIAS EN GOOGLE'])            
+            writer.writerow(['UID','DNI','EN GOOGLE', 'MAIL'])
+            # writer.writerow(['ID','DNI','EMAIL', 'EN GOOGLE', 'ALIAS EN GOOGLE'])            
             actual = 0
             total = len(uids)
             logging.info("Cantidad de usuarios: {}".format(total))
@@ -45,18 +46,22 @@ if __name__ == '__main__':
                 logging.info("{}/{} Procesando el usuario {}".format(actual, total,"{} {}".format(u.nombre, u.apellido)))        
 
                 user_google = check_google(u)
-                mails_econo = ' '.join([m.email for m in u.mails if m.eliminado is None and re.search(expr, m.email)])
+                mails_econo = [m.email for m in u.mails if m.eliminado is None and re.search(expr, m.email)]
                 if not user_google:
                     logging.info("No esta en google")
                     users_not_in_google += 1
-                    row = [u.id, u.dni, mails_econo, 'No', '']
-                    writer.writerow(row)   
+                    #row = [u.id, u.dni, ' '.join(mails_econo), 'No', '']
+                    [writer.writerow([u.id, u.dni, "No", m]) for m in mails_econo]
                 else:
                     logging.info("Esta en google")
                     users_in_google += 1
-                    alias = [m['address'] for m in user_google['emails'] if m['address'].split('@')[0] != u.dni]
-                    row = [u.id, u.dni, mails_econo, 'Si', ' '.join(alias)]
-                    writer.writerow(row)                                     
+                    mails_google = [m['address'] for m in user_google.get('emails', [])]
+                    print(mails_google)
+                    #alias = [m['address'] for m in user_google['emails'] if m['address'].split('@')[0] != u.dni]
+                    #row = [u.id, u.dni, ' '.join(mails_econo), 'Si', ' '.join(alias)]
+                    for m in mails_econo:
+                        if m not in mails_google:
+                            writer.writerow([u.id, u.dni, "Si", m])
     logging.info("Cantidad de usuarios en google: {}".format(users_in_google))
     logging.info("Cantidad de usuarios que no estan en google: {}".format(users_not_in_google))
     
