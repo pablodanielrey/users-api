@@ -6,7 +6,7 @@
             "request": "attach",
             "name": "Attach to Remote docker",
             "host": "163.10.17.14",
-            "port": 10104,
+            "port": 10114,
             "justMyCode": false,
             "pathMappings": [{
                 "localRoot": "${workspaceFolder}/src",
