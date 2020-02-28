@@ -52,9 +52,7 @@ class ListConverter(BaseConverter):
         return value.split('+')
 
     def to_url(self, values):
-        if type(values) is str:
-            return url
-        url = '+'.join(BaseConverter.to_url(value) for value in values)
+        url = '+'.join([BaseConverter.to_url(value) for value in values])
         return url
 
 #from rest_utils.converters.ListConverter import ListConverter
