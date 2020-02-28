@@ -121,9 +121,13 @@ def uuids_usuarios(token=None):
         return uuids
 
 @app.route(API_BASE + '/usuarios/<list:uids>', methods=['GET'], provide_automatic_options=False)
-@warden.require_valid_token
+#@warden.require_valid_token
 @jsonapi
 def usuarios_por_lista(uids=[], token=None):
+
+    token = warden._require_valid_token()
+    if not token:
+        return warden._invalid_token()
 
     admin = False
     prof = warden.has_all_profiles(token, ['users-super-admin'])
