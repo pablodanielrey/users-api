@@ -54,7 +54,7 @@ class ListConverter(BaseConverter):
     def to_url(self, values):
         vs = []
         for value in values:
-            c = super(BaseConverter).to_url(value)
+            c = super().to_url(value)
             vs.append(c)
         #url = '+'.join([BaseConverter.to_url(value) for value in values])
         url = '+'.join(vs)
