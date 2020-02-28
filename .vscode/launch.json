@@ -32,7 +32,7 @@
             "request": "launch",
             "module": "flask",
             "env": {
-                "FLASK_APP": "users.api.rest.main",
+                "FLASK_APP": "users_api.api.rest.main",
                 "LC_ALL": "es_AR.utf-8",
                 "LANG": "es_AR.utf-8"
             },

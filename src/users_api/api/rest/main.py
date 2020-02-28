@@ -7,13 +7,16 @@ import os
 
 from sqlalchemy.orm.exc import NoResultFound
 from flask import Flask, abort, make_response, jsonify, url_for, request, json, send_from_directory, send_file
-from users.model import UsersModel
 from flask_jsontools import jsonapi
 from dateutil import parser
 import datetime
 
 from rest_utils import register_encoder
-from users.model import obtener_session
+#from users.model import UsersModel
+#from users.model import obtener_session
+from users.model.UsersModel import UsersModel
+from users.model import open_session
+
 
 VERIFY_SSL = bool(int(os.environ.get('VERIFY_SSL',0)))
 OIDC_URL = os.environ['OIDC_URL']
@@ -60,12 +63,65 @@ def configurar_debugger():
 configurar_debugger()
 
 
-
 @app.route(API_BASE + '/<path:path>', methods=['OPTIONS'])
 def options(path=None):
     if request.method == 'OPTIONS':
         return ('',204)
     return ('',204)
+
+
+"""
+    ###############################################
+    microservices_common ---> UsersAPI
+    ###############################################
+"""
+
+@app.route(API_BASE + '/usuarios/uids', methods=['GET'], provide_automatic_options=False)
+#@warden.require_valid_token
+@jsonapi
+def uuids_usuarios(token=None):
+    token = warden._require_valid_token()
+    if not token:
+        return warden._invalid_token()
+
+    admin = False
+    prof = warden.has_all_profiles(token, ['users-super-admin'])
+    if prof and prof['profile']:
+        admin = True
+    else:
+        prof = warden.has_one_profile(token, ['users-admin', 'users-operator'])
+        if prof:
+            admin = prof['profile']
+
+    if not admin:
+        return ('no tiene los permisos suficientes', 403)
+
+    with open_session() as session:
+        uuids = UsersModel.uuids(session)
+        return uuids
+
+@app.route(API_BASE + '/usuarios/<list:uids>', methods=['GET'], provide_automatic_options=False)
+@warden.require_valid_token
+@jsonapi
+def usuarios_por_lista(uids=[], token=None):
+
+    admin = False
+    prof = warden.has_all_profiles(token, ['users-super-admin'])
+    if prof and prof['profile']:
+        admin = True
+    else:
+        prof = warden.has_one_profile(token, ['users-admin', 'users-operator'])
+        if prof:
+            admin = prof['profile']
+
+    if not admin:
+        auid = token['sub']
+        if len(uids) != 1 and auid != uids[0]:
+            return ('no tiene los permisos suficientes', 403)
+    
+    with open_session() as session:
+        users = UsersModel.get_users(session, uids)
+        return users
 
 @app.route(API_BASE + '/usuario_por_dni/<dni>', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
@@ -75,11 +131,16 @@ def usuario_por_dni(dni, token=None):
     if not prof or not prof['profile']:
         return ('Insuficient access', 401)
 
-    with obtener_session() as s:
-        u = UsersModel.usuario_por_dni(session=s, dni=dni)
-        return u
+    with open_session() as session:
+        uid = UsersModel.get_uid_person_number(session, dni)
+        if not uid:
+            return None
+        users = UsersModel.get_users(session, [uid])
+        if not users or len(users) <= 0:
+            return None
+        return users[0]
 
-@app.route(API_BASE + '/usuarios', methods=['GET'], provide_automatic_options=False)
+@app.route(API_BASE + '/usuario', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
 def usuarios_por_search(token=None):
@@ -107,60 +168,13 @@ def usuarios_por_search(token=None):
     if not admin:
         return ('no tiene los permisos suficientes', 403)
 
-    with obtener_session() as session:
-        us = UsersModel.usuarios(session=session, search=search, offset=offset, limit=limit)
-        return us
-
-@app.route(API_BASE + '/usuarios/uids', methods=['GET'], provide_automatic_options=False)
-@warden.require_valid_token
-@jsonapi
-def uuids_usuarios(token=None):
-    admin = False
-    prof = warden.has_all_profiles(token, ['users-super-admin'])
-    if prof and prof['profile']:
-        admin = True
-    else:
-        prof = warden.has_one_profile(token, ['users-admin', 'users-operator'])
-        if prof:
-            admin = prof['profile']
-
-    if not admin:
-        return ('no tiene los permisos suficientes', 403)
-
-    with obtener_session() as session:
-        us = UsersModel.usuarios_uuids(session=session)
-        return us        
+    with open_session() as session:
+        users = UsersModel.search_user(session, search)
+        return users
+        
 
 
-@app.route(API_BASE + '/usuarios/<list:uids>', methods=['GET'], provide_automatic_options=False)
-@warden.require_valid_token
-@jsonapi
-def usuarios_por_lista(uids=[], token=None):
-
-    admin = False
-    prof = warden.has_all_profiles(token, ['users-super-admin'])
-    if prof and prof['profile']:
-        admin = True
-    else:
-        prof = warden.has_one_profile(token, ['users-admin', 'users-operator'])
-        if prof:
-            admin = prof['profile']
-
-    if not admin:
-        auid = token['sub']
-        if len(uids) != 1 and auid != uids[0]:
-            return ('no tiene los permisos suficientes', 403)
-
-    with obtener_session() as session:
-        usuarios = []
-        for uid in uids:
-            try:
-                us = UsersModel.usuario(session=session, uid=uid)
-                usuarios.append(us)
-            except NoResultFound as e:
-                logging.warn('{} no existe'.format(uid))
-
-        return usuarios
+"""
 
 
 @app.route(API_BASE + '/usuarios', methods=['PUT'], provide_automatic_options=False)
@@ -410,12 +424,15 @@ def chequear_disponibilidad_cuenta(cuenta, token=None):
         else:
             return {'existe':False, 'correo':None}
 
+"""
 
 """
     //////////////////////////////////////////////////////////
     ///////////////////// SINC GOOGLE ////////////////////////
     //////////////////////////////////////////////////////////
 """
+"""
+
 
 from users.model.google.GoogleModel import GoogleModel
 
@@ -447,7 +464,7 @@ def sincronizar_usuarios_detalle(token=None):
     with obtener_session() as session:
         r = GoogleModel.sincronizar_usuarios_detalle(session)
         return r
-
+"""
 
 """
     ////////////////////////////////////////////////////////////////
@@ -455,6 +472,7 @@ def sincronizar_usuarios_detalle(token=None):
     ////////////////////////////////////////////////////////////////
 """
 
+"""
 @app.route(API_BASE + '/precondiciones', methods=['GET'], provide_automatic_options=False)
 @warden.require_valid_token
 @jsonapi
@@ -477,6 +495,20 @@ def chequear_precondiciones_de_usuario(uid, token=None):
         return UsersModel.precondiciones(s,uid)
 
 
+"""
+
+@app.route('/rutas', methods=['GET'])
+@jsonapi
+def rutas():
+    links = []
+    try:
+        for rule in app.url_map.iter_rules():
+            url = url_for(rule.endpoint, **(rule.defaults or {}))
+            links.append(url)
+    except Exception as e:
+        logging.exception(e)
+    return links
+
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>', methods=['GET','POST','PUT','PATCH'])
@@ -494,10 +526,6 @@ def cors_after_request(response):
 @app.after_request
 def add_header(r):
     r = cors_after_request(r)
-    """
-    Add headers to both force latest IE rendering engine or Chrome Frame,
-    and also to cache the rendered page for 10 minutes.
-    """
     r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
     r.headers["Pragma"] = "no-cache"
     r.headers["Expires"] = "0"
@@ -506,16 +534,9 @@ def add_header(r):
     return r
 
 
-'''
-@app.route('/rutas', methods=['GET'])
-@jsonapi
-def rutas():
-    links = []
-    for rule in app.url_map.iter_rules():
-        url = url_for(rule.endpoint, **(rule.defaults or {}))
-        links.append(url)
-    return links
-'''
+
+
+
 
 def main():
     app.run(host='0.0.0.0', port=10102, debug=False)

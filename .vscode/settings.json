@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "env/bin/python",
+    "python.pythonPath": "${workspaceFolder}/env/bin/python3",
     "python.venvPath": "${workspaceFolder}/env",
     "python.linting.pylintEnabled": false
 }
