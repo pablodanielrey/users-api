@@ -5,7 +5,7 @@
             "type": "python",
             "request": "attach",
             "name": "Attach to Remote docker",
-            "host": "localhost",
+            "host": "163.10.17.14",
             "port": 10104,
             "justMyCode": false,
             "pathMappings": [{
