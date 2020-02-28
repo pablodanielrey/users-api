@@ -45,9 +45,13 @@ class ListConverter(BaseConverter):
         return value.split('+')
 
     def to_url(self, values):
-        return '+'.join(BaseConverter.to_url(value)
-                        for value in values)
-
+        vs = []
+        for value in values:
+            c = super().to_url(value)
+            vs.append(c)
+        #url = '+'.join([BaseConverter.to_url(value) for value in values])
+        url = '+'.join(vs)
+        return url
 
 app.url_map.converters['list'] = ListConverter
 """
