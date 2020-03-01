@@ -11,7 +11,7 @@ from flask_jsontools import jsonapi
 from dateutil import parser
 import datetime
 
-from rest_utils import register_encoder
+from rest_utils.encoder_alternativo import register_encoder
 #from users.model import UsersModel
 #from users.model import obtener_session
 from users.model.UsersModel import UsersModel
