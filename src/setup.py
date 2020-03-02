@@ -26,7 +26,7 @@ setup(name='users',
             'Programming Language :: Python :: 3.5'
           ],
           packages=find_packages(exclude=['contrib', 'docs', 'test*']),
-          install_requires=['psycopg2',
+          install_requires=['psycopg2-binary',
                             'dateutils>=0.6.6',
                             'requests',
                             'redis==2.10.6',
