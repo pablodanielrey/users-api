@@ -2,7 +2,7 @@ import datetime
 from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, func, or_
 from sqlalchemy.orm import relationship
 
-from model_utils import Base
+from users.model.entities import Base
 
 class ErrorGoogle(Base):
 

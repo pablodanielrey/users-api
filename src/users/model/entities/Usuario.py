@@ -2,7 +2,7 @@ from datetime import datetime, time, timedelta
 from sqlalchemy import Column, Integer, String, Date, DateTime, Boolean, func, or_, ForeignKey
 from sqlalchemy.orm import relationship
 
-from model_utils import Base
+from users.model.entities import Base
 import pytz
 
 

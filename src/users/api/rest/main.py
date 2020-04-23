@@ -170,7 +170,10 @@ def usuarios_por_lista(uids=[], token=None):
         for uid in uids:
             try:
                 us = UsersModel.usuario(session=session, uid=uid)
-                usuarios.append(us)
+                tmpUs = us.__json__()
+                tmpUs['mails'] = [m.__json__() for m in us.__json__()['mails']]
+                tmpUs['telefonos'] = [t.__json__() for t in us.__json__()['telefonos']]
+                usuarios.append(tmpUs)
             except NoResultFound as e:
                 logging.warn('{} no existe'.format(uid))
 
